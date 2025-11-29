@@ -31,13 +31,9 @@ RUN pip3 install --no-cache-dir paho-mqtt --break-system-packages
 # Instalar Bashio com stub para trace.sh
 RUN mkdir -p /usr/lib/bashio && \
     curl -sSL https://raw.githubusercontent.com/hassio-addons/bashio/main/lib/bashio.sh -o /usr/lib/bashio/bashio.sh && \
-    chmod +x /usr/lib/bashio/bashio.sh && \
-    # Criar trace.sh vazio para evitar erro
-    cat << 'EOF' > /usr/lib/bashio/trace.sh
-#!/usr/bin/with-contenv bashio
-# Stub para módulo trace removido
-EOF && \
-    chmod +x /usr/lib/bashio/trace.sh
+    # Comentar a linha do trace.sh
+    sed -i 's|source /usr/lib/bashio/trace.sh|# source /usr/lib/bashio/trace.sh|' /usr/lib/bashio/bashio.sh && \
+    chmod +x /usr/lib/bashio/bashio.sh
 
 # Clonar el proyecto
 # La ruta /alarme-intelbras es correcta
