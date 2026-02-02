@@ -1,10 +1,23 @@
-#!/usr/bin/with-contenv bashio
+#!/usr/bin/with-contenv bash
 
 # --- FUNCIONES Y TRAPS (TRAMPAS) ---
 log() { echo "=> $1"; }
+config() {
+    local key="$1"
+    local default="${2-}"
+    local value=""
+    if [[ -f /data/options.json ]]; then
+        value="$(jq -r --arg key "$key" 'if has($key) and .[$key] != null then .[$key] else "" end' /data/options.json 2>/dev/null || true)"
+    fi
+    if [[ -z "$value" && -n "${default-}" ]]; then
+        echo "$default"
+    else
+        echo "$value"
+    fi
+}
 cleanup() {
     log "Encerrando..."; pkill -P $$
-    local BROKER_IP=$(bashio::config 'mqtt_broker'); local BROKER_PORT=$(bashio::config 'mqtt_port'); local MQTT_USER=$(bashio::config 'mqtt_user'); local MQTT_PASS=$(bashio::config 'mqtt_password')
+    local BROKER_IP=$(config 'mqtt_broker'); local BROKER_PORT=$(config 'mqtt_port'); local MQTT_USER=$(config 'mqtt_user'); local MQTT_PASS=$(config 'mqtt_password')
     local MQTT_CLEANUP_OPTS=(-h "$BROKER_IP" -p "$BROKER_PORT"); [[ -n "$MQTT_USER" ]] && MQTT_CLEANUP_OPTS+=(-u "$MQTT_USER" -P "$MQTT_PASS")
     mosquitto_pub "${MQTT_CLEANUP_OPTS[@]}" -r -t "intelbras/alarm/availability" -m "offline" || true
     exit 0
@@ -13,11 +26,11 @@ trap cleanup SIGTERM SIGINT
 
 # --- LECTURA DE CONFIGURACIÓN ---
 log "Iniciando Intelbras MQTT Bridge Add-on (v7.5 - Corrección Device Class)"
-export ALARM_IP=$(bashio::config 'alarm_ip'); export ALARM_PORT=$(bashio::config 'alarm_port'); export ALARM_PASS=$(bashio::config 'alarm_password')
-export MQTT_BROKER=$(bashio::config 'mqtt_broker'); export MQTT_PORT=$(bashio::config 'mqtt_port'); export MQTT_USER=$(bashio::config 'mqtt_user'); export MQTT_PASS=$(bashio::config 'mqtt_password')
-export POLLING_INTERVAL_MINUTES=$(bashio::config 'polling_interval_minutes' 5)
-export ZONE_COUNT=$(bashio::config 'zone_count' 0)
-PASSWORD_LENGTH=$(bashio::config 'password_length')
+export ALARM_IP=$(config 'alarm_ip'); export ALARM_PORT=$(config 'alarm_port'); export ALARM_PASS=$(config 'alarm_password')
+export MQTT_BROKER=$(config 'mqtt_broker'); export MQTT_PORT=$(config 'mqtt_port'); export MQTT_USER=$(config 'mqtt_user'); export MQTT_PASS=$(config 'mqtt_password')
+export POLLING_INTERVAL_MINUTES=$(config 'polling_interval_minutes' 5)
+export ZONE_COUNT=$(config 'zone_count' 0)
+PASSWORD_LENGTH=$(config 'password_length')
 MQTT_OPTS=(-h "$MQTT_BROKER" -p "$MQTT_PORT"); [[ -n "$MQTT_USER" ]] && MQTT_OPTS+=(-u "$MQTT_USER" -P "$MQTT_PASS")
 AVAILABILITY_TOPIC="intelbras/alarm/availability"; DEVICE_ID="intelbras_alarm"; DISCOVERY_PREFIX="homeassistant"
 log "Configuración cargada. Zonas a gestionar: $ZONE_COUNT."

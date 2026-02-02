@@ -28,11 +28,6 @@ RUN pip3 install --no-cache-dir paho-mqtt --break-system-packages
 # Opción 2: O usar el paquete de Alpine directamente (comentado)
 # RUN apk add --no-cache py3-paho-mqtt
 
-# Instalar bashio
-RUN mkdir -p /usr/lib/bashio && \
-    curl -sSL https://raw.githubusercontent.com/lmagyar/bashio/main/lib/bashio.sh -o /usr/lib/bashio/bashio.sh && \
-    chmod +x /usr/lib/bashio/bashio.sh
-
 # Clonar el proyecto
 # La ruta /alarme-intelbras es correcta
 #RUN git clone https://github.com/matbott/alarme-intelbras /alarme-intelbras
