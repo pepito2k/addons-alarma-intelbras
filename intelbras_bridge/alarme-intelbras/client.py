@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 
 LOGGER = logging.getLogger(__name__)
 
-timeout = 2  # Set the timeout to 2 seconds
+timeout = 8  # Set the timeout to 8 seconds to allow slower panel responses
 
 dst_id = [0x00, 0x00]
 our_id = [0x8F, 0xFF]

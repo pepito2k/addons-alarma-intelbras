@@ -53,8 +53,16 @@ def on_message(client, userdata, msg):
 
 # --- Funciones de la Alarma ---
 def connect_and_auth_alarm():
-    try: alarm_client.connect(); alarm_client.auth(ALARM_PASS); return True
-    except (CommunicationError, AuthError) as e: logging.error(f"Fallo de conexión/auth: {e}"); return False
+    for attempt in range(1, 4):
+        try:
+            alarm_client.connect()
+            alarm_client.auth(ALARM_PASS)
+            return True
+        except (CommunicationError, AuthError) as e:
+            logging.error(f"Fallo de conexión/auth (intento {attempt}/3): {e}")
+            if attempt < 3:
+                time.sleep(1)
+    return False
 
 def _map_battery_status_to_percentage(status: str) -> int:
     return {"full": 100, "middle": 75, "low": 25, "dead": 0}.get(status, 0)
