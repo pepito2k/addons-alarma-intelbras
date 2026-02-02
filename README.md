@@ -21,6 +21,7 @@ Para que este Add-on funcione correctamente, necesitas tener lo siguiente:
 ### En Home Assistant
 * Un **Bróker MQTT** instalado y funcionando. El add-on oficial **Mosquitto broker** es la opción recomendada.
 * El bróker debe estar configurado para requerir un **nombre de usuario y contraseña**.
+* Arquitecturas soportadas por Home Assistant: **aarch64** y **amd64** (64-bit).
 
 ### En la Central de Alarma Intelbras
 * La central debe tener una **Dirección IP Fija** asignada en tu red local (puedes configurarla en las opciones de red de la central o mediante una reserva de DHCP en tu router).
