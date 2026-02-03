@@ -1,7 +1,7 @@
-name: "Panel Alarm Intelbras Hub - MQTT"
+name: "Intelbras AMT 4010/8000 Bridge - MQTT"
 version: "0.3.12"
 slug: "intelbras_bridge"
-description: "Full-featured bridge for Intelbras alarm panels (AMT-8000 and similar) via MQTT."
+description: "MQTT bridge for Intelbras AMT 4010 (ISECNet) and AMT-8000 (legacy) alarm panels."
 url: "https://github.com/pepito2k/addons-alarma-intelbras"
 arch:
   - aarch64
