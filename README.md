@@ -4,7 +4,7 @@
 
 ![image](https://github.com/user-attachments/assets/9bd1785d-8e71-4b77-a15f-4b118a667281)
 
-Este proyecto es un Add-on para Home Assistant que actúa como un puente (bridge) entre las centrales de alarma Intelbras (como la serie AMT) y un bróker MQTT. Permite monitorear el estado completo de la alarma y controlarla (armar/desarmar, panico) directamente desde la interfaz de Home Assistant.
+Este proyecto es un Add-on para Home Assistant que actúa como un puente (bridge) entre las centrales de alarma Intelbras (serie AMT) y un bróker MQTT. Permite monitorear el estado completo de la alarma y controlarla (armar/desarmar, panico) directamente desde la interfaz de Home Assistant.
 
 ## Características Principales
 
@@ -42,6 +42,7 @@ Una vez instalado, ve a la pestaña "Configuración" del add-on e introduce los 
     * `alarm_ip`: La dirección IP fija de tu central de alarma.
     * `alarm_port`: El puerto de comunicación de la central (ej: 9009).
     * `alarm_password`: La contraseña de **acceso remoto** que configuraste en la central.
+    * `alarm_protocol`: Selecciona el protocolo (`isecnet` para AMT 4010, `legacy` para AMT-8000).
     * `password_length`: La cantidad de dígitos que tiene tu contraseña (ej: 6).
     * `zone_count`: El número total de zonas de tu alarma.
 * **Datos del Bróker MQTT:**

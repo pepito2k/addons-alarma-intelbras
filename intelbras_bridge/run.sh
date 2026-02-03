@@ -27,6 +27,7 @@ trap cleanup SIGTERM SIGINT
 # --- LECTURA DE CONFIGURACIÓN ---
 log "Iniciando Intelbras MQTT Bridge Add-on (v7.5 - Corrección Device Class)"
 export ALARM_IP=$(config 'alarm_ip'); export ALARM_PORT=$(config 'alarm_port'); export ALARM_PASS=$(config 'alarm_password')
+export ALARM_PROTOCOL=$(config 'alarm_protocol' 'isecnet')
 export MQTT_BROKER=$(config 'mqtt_broker'); export MQTT_PORT=$(config 'mqtt_port'); export MQTT_USER=$(config 'mqtt_user'); export MQTT_PASS=$(config 'mqtt_password')
 export POLLING_INTERVAL_MINUTES=$(config 'polling_interval_minutes' 5)
 export ZONE_COUNT=$(config 'zone_count' 0)
@@ -37,7 +38,11 @@ log "Configuración cargada. Zonas a gestionar: $ZONE_COUNT."
 
 # --- FUNCIONES DE DISCOVERY (formato legible) ---
 publish_device_info() {
-    echo "\"device\":{\"identifiers\":[\"${DEVICE_ID}\"],\"name\":\"Alarme Intelbras\",\"model\":\"AMT-8000\",\"manufacturer\":\"Intelbras\"}"
+    local model_name="AMT-8000"
+    if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+        model_name="AMT-4010"
+    fi
+    echo "\"device\":{\"identifiers\":[\"${DEVICE_ID}\"],\"name\":\"Alarme Intelbras\",\"model\":\"${model_name}\",\"manufacturer\":\"Intelbras\"}"
 }
 publish_binary_sensor_discovery() {
     local name=$1; local uid=$2; local device_class=$3; local icon=${4:-}
@@ -92,6 +97,7 @@ done
 
 # --- GENERACIÓN DE CONFIG.CFG ---
 log "Generando config.cfg para receptorip..."
+if [[ "${ALARM_PROTOCOL}" == "legacy" ]]; then
 cat > /alarme-intelbras/config.cfg <<EOF
 [receptorip]
 addr = 0.0.0.0
@@ -105,6 +111,7 @@ tamanho = ${PASSWORD_LENGTH}
 folder_dlfoto = .
 logfile = receptorip.log
 EOF
+fi
 
 # --- LANZAMIENTO DEL SCRIPT PRINCIPAL ---
 log "Lanzando el script principal de Python (addon_main.py)..."

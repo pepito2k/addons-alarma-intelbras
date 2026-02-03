@@ -1,5 +1,5 @@
 name: "Panel Alarm Intelbras Hub - MQTT"
-version: "0.3.9"
+version: "0.3.10"
 slug: "intelbras_bridge"
 description: "Full-featured bridge for Intelbras alarm panels (AMT-8000 and similar) via MQTT."
 url: "https://github.com/pepito2k/addons-alarma-intelbras"
@@ -27,6 +27,7 @@ options:
   alarm_ip: ""
   alarm_port: 9009
   alarm_password: ""
+  alarm_protocol: "isecnet"
   password_length: 6
   polling_interval_minutes: 5
   zone_count: 8
@@ -40,6 +41,7 @@ schema:
   alarm_ip: str
   alarm_port: port
   alarm_password: password
+  alarm_protocol: list(isecnet|legacy)
   password_length: int(4,6)
   polling_interval_minutes: int(0,1440)
   zone_count: int(1,64)
