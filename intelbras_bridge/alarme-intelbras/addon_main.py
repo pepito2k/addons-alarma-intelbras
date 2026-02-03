@@ -212,6 +212,8 @@ def _poll_isecnet_once():
         response = _send_isecnet_command(StatusRequestCommand(ALARM_PASS))
         if response:
             raw_content = response.raw_frame.content if response.raw_frame else b""
+            logging.info("Raw Content")
+            logging.info(raw_content)
             if raw_content:
                 logging.debug(f"ISECNet status raw content len={len(raw_content)}")
             status_payload = b""
