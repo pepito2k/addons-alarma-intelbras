@@ -20,7 +20,17 @@ ALARM_PROTOCOL = os.environ.get('ALARM_PROTOCOL', 'isecnet').lower()
 MQTT_BROKER = os.environ.get('MQTT_BROKER'); MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883)); MQTT_USER = os.environ.get('MQTT_USER'); MQTT_PASS = os.environ.get('MQTT_PASS')
 POLLING_INTERVAL_MINUTES = int(os.environ.get('POLLING_INTERVAL_MINUTES', 5))
 ZONE_COUNT = int(os.environ.get('ZONE_COUNT', 0))
+PASSWORD_LENGTH = int(os.environ.get('PASSWORD_LENGTH', 0) or 0)
 AVAILABILITY_TOPIC = "intelbras/alarm/availability"; COMMAND_TOPIC = "intelbras/alarm/command"; BASE_TOPIC = "intelbras/alarm"
+def _normalize_isecnet_password(password: str | None, length: int) -> str | None:
+    if not password:
+        return password
+    if length and len(password) < length and password.isdigit():
+        return password.zfill(length)
+    return password
+
+ALARM_PASS_ISECNET = _normalize_isecnet_password(ALARM_PASS, PASSWORD_LENGTH)
+
 alarm_client = AlarmClient(host=ALARM_IP, port=ALARM_PORT) if ALARM_PROTOCOL == "legacy" else None
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 shutdown_event = threading.Event(); alarm_lock = threading.Lock()
@@ -72,19 +82,19 @@ def on_message(client, userdata, msg):
                 if ALARM_PROTOCOL == "legacy":
                     alarm_client.arm_system(0)
                 else:
-                    _send_isecnet_command(ActivationCommand.arm_all(ALARM_PASS))
+                    _send_isecnet_command(ActivationCommand.arm_all(ALARM_PASS_ISECNET))
             elif command == "DISARM":
                 if ALARM_PROTOCOL == "legacy":
                     alarm_client.disarm_system(0)
                 else:
-                    _send_isecnet_command(DeactivationCommand.disarm_all(ALARM_PASS))
+                    _send_isecnet_command(DeactivationCommand.disarm_all(ALARM_PASS_ISECNET))
             elif command == "PANIC":
                 logging.info("¡Activando pánico audible desde Home Assistant!")
                 if ALARM_PROTOCOL == "legacy":
                     alarm_client.panic(1) # El tipo 1 suele ser pánico audible
                 else:
-                    _send_isecnet_command(SirenCommand.turn_on_siren(ALARM_PASS))
-                    threading.Timer(30.0, lambda: _send_isecnet_command(SirenCommand.turn_off_siren(ALARM_PASS))).start()
+                    _send_isecnet_command(SirenCommand.turn_on_siren(ALARM_PASS_ISECNET))
+                    threading.Timer(30.0, lambda: _send_isecnet_command(SirenCommand.turn_off_siren(ALARM_PASS_ISECNET))).start()
         except (CommunicationError, AuthError) as e: logging.error(f"Error de comunicación en comando: {e}")
 
 # --- Funciones de la Alarma ---
@@ -209,11 +219,13 @@ def _poll_isecnet_once():
         return
     try:
         logging.info("Sondeando estado de la central (ISECNet)...")
-        response = _send_isecnet_command(StatusRequestCommand(ALARM_PASS))
+        response = _send_isecnet_command(StatusRequestCommand(ALARM_PASS_ISECNET))
         if response:
+            if response.is_error:
+                logging.warning(f"ISECNet error: {response.message} (0x{response.code:02X})")
+                return
             raw_content = response.raw_frame.content if response.raw_frame else b""
-            logging.info("Raw Content")
-            logging.info(raw_content)
+            logging.info(f"Raw Content: {raw_content!r}")
             if raw_content:
                 logging.debug(f"ISECNet status raw content len={len(raw_content)}")
             status_payload = b""

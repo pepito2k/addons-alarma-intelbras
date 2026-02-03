@@ -31,7 +31,7 @@ export ALARM_PROTOCOL=$(config 'alarm_protocol' 'isecnet')
 export MQTT_BROKER=$(config 'mqtt_broker'); export MQTT_PORT=$(config 'mqtt_port'); export MQTT_USER=$(config 'mqtt_user'); export MQTT_PASS=$(config 'mqtt_password')
 export POLLING_INTERVAL_MINUTES=$(config 'polling_interval_minutes' 5)
 export ZONE_COUNT=$(config 'zone_count' 0)
-PASSWORD_LENGTH=$(config 'password_length')
+export PASSWORD_LENGTH=$(config 'password_length')
 MQTT_OPTS=(-h "$MQTT_BROKER" -p "$MQTT_PORT"); [[ -n "$MQTT_USER" ]] && MQTT_OPTS+=(-u "$MQTT_USER" -P "$MQTT_PASS")
 AVAILABILITY_TOPIC="intelbras/alarm/availability"; DEVICE_ID="intelbras_alarm"; DISCOVERY_PREFIX="homeassistant"
 log "Configuración cargada. Zonas a gestionar: $ZONE_COUNT."
