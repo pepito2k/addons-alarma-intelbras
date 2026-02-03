@@ -106,6 +106,8 @@ def start_isecnet_server():
         global isecnet_connection_id
         isecnet_connection_id = conn.id
         logging.info(f"Central AMT conectada (ISECNet): {conn.id}")
+        # Poll status immediately after connect (in a separate thread to avoid event loop deadlock)
+        threading.Thread(target=_poll_isecnet_once, daemon=True).start()
 
     @isecnet_server.on_disconnect
     async def _on_disconnect(conn):
@@ -198,6 +200,65 @@ def _publish_isecnet_status(status: CentralStatus):
     else:
         mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
 
+def _poll_isecnet_once():
+    if not ensure_isecnet_connected():
+        logging.warning("Sondeo omitido, no hay conexión ISECNet.")
+        return
+    try:
+        logging.info("Sondeando estado de la central (ISECNet)...")
+        response = _send_isecnet_command(StatusRequestCommand(ALARM_PASS))
+        if response:
+            raw_content = response.raw_frame.content if response.raw_frame else b""
+            if raw_content:
+                logging.debug(f"ISECNet status raw content len={len(raw_content)}")
+            status_payload = b""
+            if raw_content and raw_content[0] == 0xFE and len(raw_content) > 1:
+                # ACK seguido de datos
+                status_payload = raw_content[1:]
+            else:
+                status_payload = raw_content or response.data
+
+            status = None
+            if len(status_payload) == 54:
+                status = CentralStatus.try_parse(status_payload)
+            elif len(status_payload) == 43:
+                partial = PartialCentralStatus.try_parse(status_payload)
+                if partial:
+                    # Promove parcial para um "status" mínimo
+                    status = CentralStatus(
+                        model=partial.model,
+                        firmware_version=partial.firmware_version,
+                        armed=partial.armed,
+                        triggered=partial.triggered,
+                        siren_on=partial.siren_on,
+                        has_problem=partial.has_problem,
+                        central_datetime=partial.central_datetime,
+                        zones=partial.zones,
+                        partitions=partial.partitions,
+                        pgm=partial.pgm,
+                        problems=partial.problems,
+                        raw_data=partial.raw_data,
+                    )
+
+            if status:
+                _publish_isecnet_status(status)
+                for zone_id in range(1, ZONE_COUNT + 1):
+                    zone_key = str(zone_id)
+                    if zone_id in status.zones.violated_zones:
+                        zone_states[zone_key] = "Disparada"
+                    elif zone_id in status.zones.open_zones:
+                        zone_states[zone_key] = "Abierta"
+                    else:
+                        if zone_states.get(zone_key) != "Disparada":
+                            zone_states[zone_key] = "Cerrada"
+                publish_zone_states()
+            else:
+                logging.warning("Respuesta ISECNet sin datos suficientes para status.")
+        else:
+            logging.warning("Respuesta ISECNet vacía.")
+    except Exception as e:
+        logging.warning(f"Error durante sondeo ISECNet: {e}.")
+
 def status_polling_thread():
     logging.info(f"Iniciando sondeo cada {POLLING_INTERVAL_MINUTES} minutos.")
     while not shutdown_event.is_set():
@@ -224,63 +285,7 @@ def status_polling_thread():
                         publish_zone_states()
                     except (CommunicationError, AuthError) as e: logging.warning(f"Error durante sondeo: {e}.")
             else:
-                if not ensure_isecnet_connected():
-                    logging.warning("Sondeo omitido, no hay conexión ISECNet.")
-                else:
-                    try:
-                        logging.info("Sondeando estado de la central (ISECNet)...")
-                        response = _send_isecnet_command(StatusRequestCommand(ALARM_PASS))
-                        if response:
-                            raw_content = response.raw_frame.content if response.raw_frame else b""
-                            if raw_content:
-                                logging.debug(f"ISECNet status raw content len={len(raw_content)}")
-                            status_payload = b""
-                            if raw_content and raw_content[0] == 0xFE and len(raw_content) > 1:
-                                # ACK seguido de datos
-                                status_payload = raw_content[1:]
-                            else:
-                                status_payload = raw_content or response.data
-
-                            status = None
-                            if len(status_payload) == 54:
-                                status = CentralStatus.try_parse(status_payload)
-                            elif len(status_payload) == 43:
-                                partial = PartialCentralStatus.try_parse(status_payload)
-                                if partial:
-                                    # Promove parcial para um "status" mínimo
-                                    status = CentralStatus(
-                                        model=partial.model,
-                                        firmware_version=partial.firmware_version,
-                                        armed=partial.armed,
-                                        triggered=partial.triggered,
-                                        siren_on=partial.siren_on,
-                                        has_problem=partial.has_problem,
-                                        central_datetime=partial.central_datetime,
-                                        zones=partial.zones,
-                                        partitions=partial.partitions,
-                                        pgm=partial.pgm,
-                                        problems=partial.problems,
-                                        raw_data=partial.raw_data,
-                                    )
-
-                            if status:
-                                _publish_isecnet_status(status)
-                                for zone_id in range(1, ZONE_COUNT + 1):
-                                    zone_key = str(zone_id)
-                                    if zone_id in status.zones.violated_zones:
-                                        zone_states[zone_key] = "Disparada"
-                                    elif zone_id in status.zones.open_zones:
-                                        zone_states[zone_key] = "Abierta"
-                                    else:
-                                        if zone_states.get(zone_key) != "Disparada":
-                                            zone_states[zone_key] = "Cerrada"
-                                publish_zone_states()
-                            else:
-                                logging.warning("Respuesta ISECNet sin datos suficientes para status.")
-                        else:
-                            logging.warning("Respuesta ISECNet vacía.")
-                    except Exception as e:
-                        logging.warning(f"Error durante sondeo ISECNet: {e}.")
+                _poll_isecnet_once()
         shutdown_event.wait(POLLING_INTERVAL_MINUTES * 60)
     logging.info("Hilo de sondeo terminado.")
 
