@@ -47,7 +47,10 @@ def on_connect(client, userdata, flags, reason_code, properties):
         client.publish(AVAILABILITY_TOPIC, "online", retain=True)
         # --- INICIO: Publicar estado inicial de nuevos sensores ---
         client.publish(f"{BASE_TOPIC}/ac_power", "on", retain=True)
-        client.publish(f"{BASE_TOPIC}/system_battery", "on", retain=True)
+        client.publish(f"{BASE_TOPIC}/system_battery", "off", retain=True)
+        client.publish(f"{BASE_TOPIC}/tamper", "off", retain=True)
+        client.publish(f"{BASE_TOPIC}/panic", "off", retain=True)
+        publish_zone_states()
         # --- FIN: Publicar estado inicial ---
     else:
         logging.error(f"Fallo al conectar a MQTT: {reason_code}")
@@ -269,9 +272,15 @@ def status_polling_thread():
                 else:
                     try:
                         logging.info("Sondeando estado de la central...")
+                        logging.info(status)
                         status = alarm_client.status()
                         mqtt_client.publish(f"{BASE_TOPIC}/model", status.get("model", "Desconocido"), retain=True)
                         mqtt_client.publish(f"{BASE_TOPIC}/version", status.get("version", "Desconocido"), retain=True)
+                        legacy_state = status.get("status", "unknown")
+                        if legacy_state == "armed_away" or legacy_state == "partial_armed":
+                            mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada", retain=True)
+                        elif legacy_state == "disarmed":
+                            mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
                         battery_level = _map_battery_status_to_percentage(status.get("batteryStatus"))
                         mqtt_client.publish(f"{BASE_TOPIC}/battery_percentage", battery_level, retain=True)
                         tamper_state = "on" if status.get("tamper", False) else "off"
