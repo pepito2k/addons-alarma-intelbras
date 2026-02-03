@@ -63,7 +63,13 @@ publish_numeric_sensor_discovery() {
 }
 publish_alarm_panel_discovery() {
     log "Publicando Painel de Alarme..."; local uid="${DEVICE_ID}_panel"; local command_topic="intelbras/alarm/command"; local state_topic="intelbras/alarm/state"
-    local payload='{'; payload+="\"name\":\"Painel de Alarma Intelbras\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\","; payload+="\"command_topic\":\"${command_topic}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="\"value_template\":\"{% if value == 'Disparada' %}triggered{% elif value == 'Armada' %}armed_away{% else %}disarmed{% endif %}\","; payload+="\"payload_disarm\":\"DISARM\",\"payload_arm_away\":\"ARM_AWAY\",\"supported_features\":[\"arm_away\"],"; payload+="\"code_arm_required\":false,\"code_disarm_required\":false,"; payload+="$(publish_device_info)"; payload+='}';
+    local supported_features='["arm_away"]'
+    local extra_payload=""
+    if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+        supported_features='["arm_away","arm_home"]'
+        extra_payload="\"payload_arm_home\":\"ARM_HOME\","
+    fi
+    local payload='{'; payload+="\"name\":\"Painel de Alarma Intelbras\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\","; payload+="\"command_topic\":\"${command_topic}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="\"value_template\":\"{% if value == 'Disparada' %}triggered{% elif value == 'Armada Parcial' %}armed_home{% elif value == 'Armada' %}armed_away{% else %}disarmed{% endif %}\","; payload+="\"payload_disarm\":\"DISARM\",\"payload_arm_away\":\"ARM_AWAY\","; payload+="${extra_payload}"; payload+="\"supported_features\":${supported_features},"; payload+="\"code_arm_required\":false,\"code_disarm_required\":false,"; payload+="$(publish_device_info)"; payload+='}';
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/alarm_control_panel/${DEVICE_ID}/config" -m "${payload}"
 }
 publish_button_discovery() {
@@ -83,6 +89,7 @@ publish_text_sensor_discovery "Versión Firmware" "version" "mdi:git"
 publish_numeric_sensor_discovery "Batería Alarma" "battery_percentage" "battery" "%" "mdi:battery"
 publish_binary_sensor_discovery "Tamper Alarma" "tamper" "tamper"
 publish_binary_sensor_discovery "Pánico Silencioso" "panic" "safety"
+publish_binary_sensor_discovery "Memoria de Disparo" "alarm_memory" "problem"
 publish_button_discovery "Pánico Audible" "panic_button" "mdi:alert-decagram"
 
 # --- INICIO: LÍNEAS CORREGIDAS ---

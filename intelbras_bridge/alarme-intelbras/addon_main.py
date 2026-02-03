@@ -83,6 +83,11 @@ def on_message(client, userdata, msg):
                     alarm_client.arm_system(0)
                 else:
                     _send_isecnet_command(ActivationCommand.arm_all(ALARM_PASS_ISECNET))
+            elif command == "ARM_HOME":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_HOME no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_stay(ALARM_PASS_ISECNET))
             elif command == "DISARM":
                 if ALARM_PROTOCOL == "legacy":
                     alarm_client.disarm_system(0)
@@ -206,10 +211,20 @@ def _publish_isecnet_status(status: CentralStatus):
     mqtt_client.publish(f"{BASE_TOPIC}/ac_power", ac_power_state, retain=True)
     system_battery_state = "on" if (status.problems.low_battery or status.problems.battery_absent or status.problems.battery_short) else "off"
     mqtt_client.publish(f"{BASE_TOPIC}/system_battery", system_battery_state, retain=True)
-    if status.triggered:
+    alarm_active = status.armed
+    alarm_triggered_now = bool(status.siren_on or status.zones.violated_zones)
+    alarm_memory = bool(status.triggered)
+    mqtt_client.publish(f"{BASE_TOPIC}/alarm_memory", "on" if alarm_memory else "off", retain=True)
+    if alarm_active and alarm_triggered_now:
         mqtt_client.publish(f"{BASE_TOPIC}/state", "Disparada", retain=True)
     elif status.armed:
-        mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada", retain=True)
+        if status.partitions.partitions_enabled:
+            if status.partitions.all_armed:
+                mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada", retain=True)
+            else:
+                mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada Parcial", retain=True)
+        else:
+            mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada", retain=True)
     else:
         mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
 
@@ -291,8 +306,10 @@ def status_polling_thread():
                         mqtt_client.publish(f"{BASE_TOPIC}/model", status.get("model", "Desconocido"), retain=True)
                         mqtt_client.publish(f"{BASE_TOPIC}/version", status.get("version", "Desconocido"), retain=True)
                         legacy_state = status.get("status", "unknown")
-                        if legacy_state == "armed_away" or legacy_state == "partial_armed":
+                        if legacy_state == "armed_away":
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada", retain=True)
+                        elif legacy_state == "partial_armed":
+                            mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada Parcial", retain=True)
                         elif legacy_state == "disarmed":
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
                         battery_level = _map_battery_status_to_percentage(status.get("batteryStatus"))
