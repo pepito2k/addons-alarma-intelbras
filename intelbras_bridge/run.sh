@@ -96,8 +96,8 @@ for i in $(seq 1 "$ZONE_COUNT"); do
 done
 
 # --- GENERACIÓN DE CONFIG.CFG ---
-log "Generando config.cfg para receptorip..."
 if [[ "${ALARM_PROTOCOL}" == "legacy" ]]; then
+log "Generando config.cfg para receptorip..."
 cat > /alarme-intelbras/config.cfg <<EOF
 [receptorip]
 addr = 0.0.0.0
