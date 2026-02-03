@@ -60,6 +60,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
         client.publish(f"{BASE_TOPIC}/system_battery", "off", retain=True)
         client.publish(f"{BASE_TOPIC}/tamper", "off", retain=True)
         client.publish(f"{BASE_TOPIC}/panic", "off", retain=True)
+        client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
         publish_zone_states()
         # --- FIN: Publicar estado inicial ---
     else:
@@ -88,6 +89,46 @@ def on_message(client, userdata, msg):
                     logging.warning("ARM_HOME no está soportado en protocolo legacy.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_stay(ALARM_PASS_ISECNET))
+            elif command == "ARM_PART_A":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_PART_A no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_a(ALARM_PASS_ISECNET))
+            elif command == "ARM_PART_B":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_PART_B no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_b(ALARM_PASS_ISECNET))
+            elif command == "ARM_PART_C":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_PART_C no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_c(ALARM_PASS_ISECNET))
+            elif command == "ARM_PART_D":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_PART_D no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_d(ALARM_PASS_ISECNET))
+            elif command == "DISARM_PART_A":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("DISARM_PART_A no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(DeactivationCommand.disarm_partition_a(ALARM_PASS_ISECNET))
+            elif command == "DISARM_PART_B":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("DISARM_PART_B no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(DeactivationCommand.disarm_partition_b(ALARM_PASS_ISECNET))
+            elif command == "DISARM_PART_C":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("DISARM_PART_C no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(DeactivationCommand.disarm_partition_c(ALARM_PASS_ISECNET))
+            elif command == "DISARM_PART_D":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("DISARM_PART_D no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(DeactivationCommand.disarm_partition_d(ALARM_PASS_ISECNET))
             elif command == "DISARM":
                 if ALARM_PROTOCOL == "legacy":
                     alarm_client.disarm_system(0)
@@ -215,6 +256,9 @@ def _publish_isecnet_status(status: CentralStatus):
     alarm_triggered_now = bool(status.siren_on or status.zones.violated_zones)
     alarm_memory = bool(status.triggered)
     mqtt_client.publish(f"{BASE_TOPIC}/alarm_memory", "on" if alarm_memory else "off", retain=True)
+    violated_list = sorted(status.zones.violated_zones)
+    triggered_zones = ",".join(str(zone) for zone in violated_list) if violated_list else "Ninguna"
+    mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", triggered_zones, retain=True)
     if alarm_active and alarm_triggered_now:
         mqtt_client.publish(f"{BASE_TOPIC}/state", "Disparada", retain=True)
     elif status.armed:
@@ -312,6 +356,10 @@ def status_polling_thread():
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada Parcial", retain=True)
                         elif legacy_state == "disarmed":
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
+                        if status.get("zonesFiring"):
+                            mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", "Desconocido", retain=True)
+                        else:
+                            mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
                         battery_level = _map_battery_status_to_percentage(status.get("batteryStatus"))
                         mqtt_client.publish(f"{BASE_TOPIC}/battery_percentage", battery_level, retain=True)
                         tamper_state = "on" if status.get("tamper", False) else "off"
@@ -361,6 +409,7 @@ def process_receptorip_output(proc):
                     if int(zone_id) <= ZONE_COUNT:
                         zone_states[zone_id] = "Disparada"
                         mqtt_client.publish(f"{BASE_TOPIC}/state", "Disparada", retain=True)
+                        mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", zone_id, retain=True)
                         logging.info(f"Panel de alarma puesto en estado 'Disparada' debido a zona {zone_id}")
                         publish_required = True
                 except: logging.warning(f"No se pudo extraer ID de zona de: {line}")
@@ -369,6 +418,7 @@ def process_receptorip_output(proc):
                     zone_id = line.split()[-1]
                     if int(zone_id) <= ZONE_COUNT:
                         zone_states[zone_id] = "Cerrada"
+                        mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
                         publish_required = True
                 except: logging.warning(f"No se pudo extraer ID de zona de: {line}")
         if publish_required:

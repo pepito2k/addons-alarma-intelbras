@@ -73,9 +73,8 @@ publish_alarm_panel_discovery() {
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/alarm_control_panel/${DEVICE_ID}/config" -m "${payload}"
 }
 publish_button_discovery() {
-    local name=$1; local uid=$2; local icon=$3
+    local name=$1; local uid=$2; local icon=$3; local payload_press=${4:-PANIC}
     local command_topic="intelbras/alarm/command"
-    local payload_press="PANIC"
     local payload='{'; payload+="\"name\":\"${name}\",\"unique_id\":\"${uid}\",\"command_topic\":\"${command_topic}\","; payload+="\"payload_press\":\"${payload_press}\",\"icon\":\"${icon}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="$(publish_device_info)"; payload+='}';
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/${uid}/config" -m "${payload}"
 }
@@ -86,6 +85,7 @@ publish_alarm_panel_discovery
 publish_text_sensor_discovery "Estado Alarma" "state" "mdi:shield-lock"
 publish_text_sensor_discovery "Modelo Alarma" "model" "mdi:chip"
 publish_text_sensor_discovery "Versión Firmware" "version" "mdi:git"
+publish_text_sensor_discovery "Zonas Disparadas" "triggered_zones" "mdi:alert-circle"
 publish_numeric_sensor_discovery "Batería Alarma" "battery_percentage" "battery" "%" "mdi:battery"
 publish_binary_sensor_discovery "Tamper Alarma" "tamper" "tamper"
 publish_binary_sensor_discovery "Pánico Silencioso" "panic" "safety"
@@ -101,6 +101,18 @@ log "Publicando sensores de zona de texto individuales..."
 for i in $(seq 1 "$ZONE_COUNT"); do
     publish_text_sensor_discovery "Zona $i" "zone_$i" "mdi:door"
 done
+
+if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+    log "Publicando botones de particiones..."
+    publish_button_discovery "Armar Partición A" "arm_part_a" "mdi:shield-lock" "ARM_PART_A"
+    publish_button_discovery "Armar Partición B" "arm_part_b" "mdi:shield-lock" "ARM_PART_B"
+    publish_button_discovery "Armar Partición C" "arm_part_c" "mdi:shield-lock" "ARM_PART_C"
+    publish_button_discovery "Armar Partición D" "arm_part_d" "mdi:shield-lock" "ARM_PART_D"
+    publish_button_discovery "Desarmar Partición A" "disarm_part_a" "mdi:shield-off" "DISARM_PART_A"
+    publish_button_discovery "Desarmar Partición B" "disarm_part_b" "mdi:shield-off" "DISARM_PART_B"
+    publish_button_discovery "Desarmar Partición C" "disarm_part_c" "mdi:shield-off" "DISARM_PART_C"
+    publish_button_discovery "Desarmar Partición D" "disarm_part_d" "mdi:shield-off" "DISARM_PART_D"
+fi
 
 # --- GENERACIÓN DE CONFIG.CFG ---
 if [[ "${ALARM_PROTOCOL}" == "legacy" ]]; then
