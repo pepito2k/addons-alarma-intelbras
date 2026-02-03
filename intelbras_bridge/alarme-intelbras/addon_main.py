@@ -9,7 +9,7 @@ from isecnet.protocol.commands import (
     SirenCommand,
     StatusRequestCommand,
 )
-from isecnet.protocol.commands.status import CentralStatus
+from isecnet.protocol.commands.status import CentralStatus, PartialCentralStatus
 from isecnet.protocol.responses import ResponseType
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] - %(levelname)s - %(message)s', stream=sys.stdout)
@@ -230,8 +230,39 @@ def status_polling_thread():
                     try:
                         logging.info("Sondeando estado de la central (ISECNet)...")
                         response = _send_isecnet_command(StatusRequestCommand(ALARM_PASS))
-                        if response and response.response_type == ResponseType.DATA and len(response.data) >= 54:
-                            status = CentralStatus.try_parse(response.data)
+                        if response:
+                            raw_content = response.raw_frame.content if response.raw_frame else b""
+                            if raw_content:
+                                logging.debug(f"ISECNet status raw content len={len(raw_content)}")
+                            status_payload = b""
+                            if raw_content and raw_content[0] == 0xFE and len(raw_content) > 1:
+                                # ACK seguido de datos
+                                status_payload = raw_content[1:]
+                            else:
+                                status_payload = raw_content or response.data
+
+                            status = None
+                            if len(status_payload) == 54:
+                                status = CentralStatus.try_parse(status_payload)
+                            elif len(status_payload) == 43:
+                                partial = PartialCentralStatus.try_parse(status_payload)
+                                if partial:
+                                    # Promove parcial para um "status" mínimo
+                                    status = CentralStatus(
+                                        model=partial.model,
+                                        firmware_version=partial.firmware_version,
+                                        armed=partial.armed,
+                                        triggered=partial.triggered,
+                                        siren_on=partial.siren_on,
+                                        has_problem=partial.has_problem,
+                                        central_datetime=partial.central_datetime,
+                                        zones=partial.zones,
+                                        partitions=partial.partitions,
+                                        pgm=partial.pgm,
+                                        problems=partial.problems,
+                                        raw_data=partial.raw_data,
+                                    )
+
                             if status:
                                 _publish_isecnet_status(status)
                                 for zone_id in range(1, ZONE_COUNT + 1):
@@ -245,9 +276,9 @@ def status_polling_thread():
                                             zone_states[zone_key] = "Cerrada"
                                 publish_zone_states()
                             else:
-                                logging.warning("No se pudo parsear el status completo (0x5B).")
+                                logging.warning("Respuesta ISECNet sin datos suficientes para status.")
                         else:
-                            logging.warning("Respuesta ISECNet sin datos suficientes para status.")
+                            logging.warning("Respuesta ISECNet vacía.")
                     except Exception as e:
                         logging.warning(f"Error durante sondeo ISECNet: {e}.")
         shutdown_event.wait(POLLING_INTERVAL_MINUTES * 60)
