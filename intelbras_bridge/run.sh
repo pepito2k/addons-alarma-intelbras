@@ -63,14 +63,19 @@ publish_numeric_sensor_discovery() {
 }
 publish_alarm_panel_discovery() {
     log "Publicando Painel de Alarme..."; local uid="${DEVICE_ID}_panel"; local command_topic="intelbras/alarm/command"; local state_topic="intelbras/alarm/state"
-    local supported_features='["arm_away"]'
-    local extra_payload=""
-    if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
-        supported_features='["arm_away","arm_home"]'
-        extra_payload="\"payload_arm_home\":\"ARM_HOME\","
-    fi
-    local payload='{'; payload+="\"name\":\"Painel de Alarma Intelbras\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\","; payload+="\"command_topic\":\"${command_topic}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="\"value_template\":\"{% if value == 'Disparada' %}triggered{% elif value == 'Armada Parcial' %}armed_home{% elif value == 'Armada' %}armed_away{% else %}disarmed{% endif %}\","; payload+="\"payload_disarm\":\"DISARM\",\"payload_arm_away\":\"ARM_AWAY\","; payload+="${extra_payload}"; payload+="\"supported_features\":${supported_features},"; payload+="\"code_arm_required\":false,\"code_disarm_required\":false,"; payload+="$(publish_device_info)"; payload+='}';
+    local payload='{'; payload+="\"name\":\"Painel de Alarma Intelbras\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\","; payload+="\"command_topic\":\"${command_topic}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="\"value_template\":\"{% if value == 'Disparada' %}triggered{% elif value == 'Armada Parcial' %}armed_away{% elif value == 'Armada' %}armed_away{% else %}disarmed{% endif %}\","; payload+="\"payload_disarm\":\"DISARM\",\"payload_arm_away\":\"ARM_AWAY\","; payload+="\"supported_features\":[\"arm_away\"],"; payload+="\"code_arm_required\":false,\"code_disarm_required\":false,"; payload+="$(publish_device_info)"; payload+='}';
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/alarm_control_panel/${DEVICE_ID}/config" -m "${payload}"
+}
+publish_partition_alarm_panel_discovery() {
+    local partition_letter=$1
+    local partition_name=$2
+    local uid="${DEVICE_ID}_partition_${partition_letter}"
+    local state_topic="intelbras/alarm/partition_${partition_letter}_state"
+    local command_topic="intelbras/alarm/command"
+    local arm_payload="ARM_PART_${partition_name}"
+    local disarm_payload="DISARM_PART_${partition_name}"
+    local payload='{'; payload+="\"name\":\"Partição ${partition_name}\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\","; payload+="\"command_topic\":\"${command_topic}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="\"value_template\":\"{% if value == 'Disparada' %}triggered{% elif value == 'Armada' %}armed_away{% else %}disarmed{% endif %}\","; payload+="\"payload_disarm\":\"${disarm_payload}\",\"payload_arm_away\":\"${arm_payload}\","; payload+="\"supported_features\":[\"arm_away\"],"; payload+="\"code_arm_required\":false,\"code_disarm_required\":false,"; payload+="$(publish_device_info)"; payload+='}';
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/alarm_control_panel/${DEVICE_ID}/${uid}/config" -m "${payload}"
 }
 publish_button_discovery() {
     local name=$1; local uid=$2; local icon=$3; local payload_press=${4:-PANIC}
@@ -103,6 +108,12 @@ for i in $(seq 1 "$ZONE_COUNT"); do
 done
 
 if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+    log "Publicando particiones..."
+    publish_partition_alarm_panel_discovery "a" "A"
+    publish_partition_alarm_panel_discovery "b" "B"
+    publish_partition_alarm_panel_discovery "c" "C"
+    publish_partition_alarm_panel_discovery "d" "D"
+
     log "Publicando botones de particiones..."
     publish_button_discovery "Armar Partición A" "arm_part_a" "mdi:shield-lock" "ARM_PART_A"
     publish_button_discovery "Armar Partición B" "arm_part_b" "mdi:shield-lock" "ARM_PART_B"

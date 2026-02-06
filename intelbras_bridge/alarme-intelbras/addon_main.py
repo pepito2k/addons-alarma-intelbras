@@ -61,6 +61,10 @@ def on_connect(client, userdata, flags, reason_code, properties):
         client.publish(f"{BASE_TOPIC}/tamper", "off", retain=True)
         client.publish(f"{BASE_TOPIC}/panic", "off", retain=True)
         client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_a_state", "Desarmada", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_b_state", "Desarmada", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_c_state", "Desarmada", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_d_state", "Desarmada", retain=True)
         publish_zone_states()
         # --- FIN: Publicar estado inicial ---
     else:
@@ -259,6 +263,40 @@ def _publish_isecnet_status(status: CentralStatus):
     violated_list = sorted(status.zones.violated_zones)
     triggered_zones = ",".join(str(zone) for zone in violated_list) if violated_list else "Ninguna"
     mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", triggered_zones, retain=True)
+    if status.siren_on:
+        partition_state = "Disparada"
+    elif status.partitions.partitions_enabled:
+        partition_state = None
+    else:
+        partition_state = "Armada" if status.armed else "Desarmada"
+
+    if partition_state is None:
+        mqtt_client.publish(
+            f"{BASE_TOPIC}/partition_a_state",
+            "Armada" if status.partitions.partition_a_armed else "Desarmada",
+            retain=True,
+        )
+        mqtt_client.publish(
+            f"{BASE_TOPIC}/partition_b_state",
+            "Armada" if status.partitions.partition_b_armed else "Desarmada",
+            retain=True,
+        )
+        mqtt_client.publish(
+            f"{BASE_TOPIC}/partition_c_state",
+            "Armada" if status.partitions.partition_c_armed else "Desarmada",
+            retain=True,
+        )
+        mqtt_client.publish(
+            f"{BASE_TOPIC}/partition_d_state",
+            "Armada" if status.partitions.partition_d_armed else "Desarmada",
+            retain=True,
+        )
+    else:
+        mqtt_client.publish(f"{BASE_TOPIC}/partition_a_state", partition_state, retain=True)
+        mqtt_client.publish(f"{BASE_TOPIC}/partition_b_state", partition_state, retain=True)
+        mqtt_client.publish(f"{BASE_TOPIC}/partition_c_state", partition_state, retain=True)
+        mqtt_client.publish(f"{BASE_TOPIC}/partition_d_state", partition_state, retain=True)
+
     if alarm_active and alarm_triggered_now:
         mqtt_client.publish(f"{BASE_TOPIC}/state", "Disparada", retain=True)
     elif status.armed:
