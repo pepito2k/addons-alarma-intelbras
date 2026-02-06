@@ -92,7 +92,22 @@ def on_message(client, userdata, msg):
                 if ALARM_PROTOCOL == "legacy":
                     logging.warning("ARM_HOME no está soportado en protocolo legacy.")
                 else:
-                    _send_isecnet_command(ActivationCommand.arm_stay(ALARM_PASS_ISECNET))
+                    _send_isecnet_command(ActivationCommand.arm_partition_a(ALARM_PASS_ISECNET))
+            elif command == "ARM_NIGHT":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_NIGHT no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_b(ALARM_PASS_ISECNET))
+            elif command == "ARM_VACATION":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_VACATION no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_c(ALARM_PASS_ISECNET))
+            elif command == "ARM_CUSTOM_BYPASS":
+                if ALARM_PROTOCOL == "legacy":
+                    logging.warning("ARM_CUSTOM_BYPASS no está soportado en protocolo legacy.")
+                else:
+                    _send_isecnet_command(ActivationCommand.arm_partition_d(ALARM_PASS_ISECNET))
             elif command == "ARM_PART_A":
                 if ALARM_PROTOCOL == "legacy":
                     logging.warning("ARM_PART_A no está soportado en protocolo legacy.")
