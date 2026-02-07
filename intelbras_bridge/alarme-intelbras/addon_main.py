@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] - %(levelname)s - 
 ALARM_IP = os.environ.get('ALARM_IP'); ALARM_PORT = int(os.environ.get('ALARM_PORT', 9009)); ALARM_PASS = os.environ.get('ALARM_PASS')
 ALARM_PROTOCOL = os.environ.get('ALARM_PROTOCOL', 'isecnet').lower()
 MQTT_BROKER = os.environ.get('MQTT_BROKER'); MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883)); MQTT_USER = os.environ.get('MQTT_USER'); MQTT_PASS = os.environ.get('MQTT_PASS')
-POLLING_INTERVAL_MINUTES = int(os.environ.get('POLLING_INTERVAL_MINUTES', 5))
+POLLING_INTERVAL_MINUTES = max(1, int(os.environ.get('POLLING_INTERVAL_MINUTES', 5)))
 ZONE_COUNT = int(os.environ.get('ZONE_COUNT', 0))
 PASSWORD_LENGTH = int(os.environ.get('PASSWORD_LENGTH', 0) or 0)
 AVAILABILITY_TOPIC = "intelbras/alarm/availability"; COMMAND_TOPIC = "intelbras/alarm/command"; BASE_TOPIC = "intelbras/alarm"
@@ -49,6 +49,32 @@ def publish_zone_states():
     for zone_id, state in zone_states.items():
         mqtt_client.publish(f"{BASE_TOPIC}/zone_{zone_id}", state, retain=True)
     logging.info(f"Estados de zona publicados a MQTT: {zone_states}")
+
+def _current_triggered_zone_ids() -> list[str]:
+    return sorted([zone_id for zone_id, state in zone_states.items() if state == "Disparada"], key=int)
+
+def publish_triggered_zones_state():
+    triggered = _current_triggered_zone_ids()
+    mqtt_client.publish(
+        f"{BASE_TOPIC}/triggered_zones",
+        ",".join(triggered) if triggered else "Ninguna",
+        retain=True,
+    )
+
+def _schedule_isecnet_siren_off(delay_seconds: float = 30.0):
+    def _safe_turn_off():
+        with alarm_lock:
+            try:
+                if not ensure_isecnet_connected():
+                    logging.warning("No hay conexión ISECNet para apagar la sirena automáticamente.")
+                    return
+                _send_isecnet_command(SirenCommand.turn_off_siren(ALARM_PASS_ISECNET))
+            except (CommunicationError, AuthError) as e:
+                logging.warning(f"No se pudo apagar la sirena automáticamente: {e}")
+            except Exception:
+                logging.exception("Error inesperado al apagar sirena automáticamente.")
+
+    threading.Timer(delay_seconds, _safe_turn_off).start()
 
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
@@ -159,7 +185,7 @@ def on_message(client, userdata, msg):
                     alarm_client.panic(1) # El tipo 1 suele ser pánico audible
                 else:
                     _send_isecnet_command(SirenCommand.turn_on_siren(ALARM_PASS_ISECNET))
-                    threading.Timer(30.0, lambda: _send_isecnet_command(SirenCommand.turn_off_siren(ALARM_PASS_ISECNET))).start()
+                    _schedule_isecnet_siren_off(30.0)
         except (CommunicationError, AuthError) as e: logging.error(f"Error de comunicación en comando: {e}")
 
 # --- Funciones de la Alarma ---
@@ -398,7 +424,6 @@ def status_polling_thread():
                 else:
                     try:
                         logging.info("Sondeando estado de la central...")
-                        logging.info(status)
                         status = alarm_client.status()
                         mqtt_client.publish(f"{BASE_TOPIC}/model", status.get("model", "Desconocido"), retain=True)
                         mqtt_client.publish(f"{BASE_TOPIC}/version", status.get("version", "Desconocido"), retain=True)
@@ -424,7 +449,10 @@ def status_polling_thread():
                                     if zone_states.get(zone_id) != "Disparada":
                                         zone_states[zone_id] = "Abierta" if new_state_str == "open" else "Cerrada"
                         publish_zone_states()
-                    except (CommunicationError, AuthError) as e: logging.warning(f"Error durante sondeo: {e}.")
+                    except (CommunicationError, AuthError) as e:
+                        logging.warning(f"Error durante sondeo: {e}.")
+                    except Exception:
+                        logging.exception("Error inesperado durante sondeo legacy.")
             else:
                 _poll_isecnet_once()
         shutdown_event.wait(POLLING_INTERVAL_MINUTES * 60)
@@ -441,6 +469,7 @@ def process_receptorip_output(proc):
             elif "Desativacao remota app" in line:
                 mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
                 for zone_id in zone_states: zone_states[zone_id] = "Cerrada"
+                publish_triggered_zones_state()
                 publish_required = True
             elif "Panico" in line:
                 logging.info(f"¡Evento de pánico detectado: {line}!")
@@ -462,18 +491,20 @@ def process_receptorip_output(proc):
                     if int(zone_id) <= ZONE_COUNT:
                         zone_states[zone_id] = "Disparada"
                         mqtt_client.publish(f"{BASE_TOPIC}/state", "Disparada", retain=True)
-                        mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", zone_id, retain=True)
+                        publish_triggered_zones_state()
                         logging.info(f"Panel de alarma puesto en estado 'Disparada' debido a zona {zone_id}")
                         publish_required = True
-                except: logging.warning(f"No se pudo extraer ID de zona de: {line}")
+                except (ValueError, IndexError):
+                    logging.warning(f"No se pudo extraer ID de zona de: {line}")
             elif "Restauracao de zona" in line:
                 try:
                     zone_id = line.split()[-1]
                     if int(zone_id) <= ZONE_COUNT:
                         zone_states[zone_id] = "Cerrada"
-                        mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
+                        publish_triggered_zones_state()
                         publish_required = True
-                except: logging.warning(f"No se pudo extraer ID de zona de: {line}")
+                except (ValueError, IndexError):
+                    logging.warning(f"No se pudo extraer ID de zona de: {line}")
         if publish_required:
             with alarm_lock:
                 publish_zone_states()

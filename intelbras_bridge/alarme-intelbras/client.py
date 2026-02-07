@@ -266,7 +266,7 @@ class Client:
             self.connect() # Intenta reconectar si no está conectado
 
         try:
-            self._socket.send(data_to_send)
+            self._socket.sendall(data_to_send)
             return_data = bytearray(self._socket.recv(1024))
             LOGGER.debug("Received response for command: %s", return_data.hex())
             return return_data

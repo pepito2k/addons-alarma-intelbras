@@ -43,7 +43,7 @@ schema:
   alarm_password: password
   alarm_protocol: list(isecnet|legacy)
   password_length: int(4,6)
-  polling_interval_minutes: int(0,1440)
+  polling_interval_minutes: int(1,1440)
   zone_count: int(1,64)
   #zone_names: [str]
   #zone_types: [str]
