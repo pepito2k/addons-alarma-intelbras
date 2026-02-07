@@ -87,10 +87,10 @@ def on_connect(client, userdata, flags, reason_code, properties):
         client.publish(f"{BASE_TOPIC}/tamper", "off", retain=True)
         client.publish(f"{BASE_TOPIC}/panic", "off", retain=True)
         client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_a_state", "Desarmada", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_b_state", "Desarmada", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_c_state", "Desarmada", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_d_state", "Desarmada", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_a_state", "OFF", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_b_state", "OFF", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_c_state", "OFF", retain=True)
+        client.publish(f"{BASE_TOPIC}/partition_d_state", "OFF", retain=True)
         publish_zone_states()
         # --- FIN: Publicar estado inicial ---
     else:
@@ -305,31 +305,31 @@ def _publish_isecnet_status(status: CentralStatus):
     triggered_zones = ",".join(str(zone) for zone in violated_list) if violated_list else "Ninguna"
     mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", triggered_zones, retain=True)
     if status.siren_on:
-        partition_state = "Disparada"
+        partition_state = "ON"
     elif status.partitions.partitions_enabled:
         partition_state = None
     else:
-        partition_state = "Armada" if status.armed else "Desarmada"
+        partition_state = "ON" if status.armed else "OFF"
 
     if partition_state is None:
         mqtt_client.publish(
             f"{BASE_TOPIC}/partition_a_state",
-            "Armada" if status.partitions.partition_a_armed else "Desarmada",
+            "ON" if status.partitions.partition_a_armed else "OFF",
             retain=True,
         )
         mqtt_client.publish(
             f"{BASE_TOPIC}/partition_b_state",
-            "Armada" if status.partitions.partition_b_armed else "Desarmada",
+            "ON" if status.partitions.partition_b_armed else "OFF",
             retain=True,
         )
         mqtt_client.publish(
             f"{BASE_TOPIC}/partition_c_state",
-            "Armada" if status.partitions.partition_c_armed else "Desarmada",
+            "ON" if status.partitions.partition_c_armed else "OFF",
             retain=True,
         )
         mqtt_client.publish(
             f"{BASE_TOPIC}/partition_d_state",
-            "Armada" if status.partitions.partition_d_armed else "Desarmada",
+            "ON" if status.partitions.partition_d_armed else "OFF",
             retain=True,
         )
     else:
