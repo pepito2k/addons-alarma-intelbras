@@ -304,7 +304,9 @@ def _publish_isecnet_status(status: CentralStatus):
     violated_list = sorted(status.zones.violated_zones)
     triggered_zones = ",".join(str(zone) for zone in violated_list) if violated_list else "Ninguna"
     mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", triggered_zones, retain=True)
-    if status.siren_on:
+    if not status.armed and not status.siren_on:
+        partition_state = "OFF"
+    elif status.siren_on:
         partition_state = "ON"
     elif status.partitions.partitions_enabled:
         partition_state = None
