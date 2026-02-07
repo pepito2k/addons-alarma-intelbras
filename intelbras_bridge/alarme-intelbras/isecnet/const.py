@@ -51,42 +51,42 @@ ISECMOBILE_CONTENT_MAX_LEN = 52
 
 class CommandCode(IntEnum):
     """Códigos de comandos ISECMobile."""
-    
+
     ACTIVATION = 0x41
     """Comando 0x41 - Activación/Armar da central ou partición."""
-    
+
     DEACTIVATION = 0x44
     """Comando 0x44 - Desactivación/Desarmar da central ou partición."""
-    
+
     PGM_CONTROL = 0x50
     """Comando 0x50 - Controle de PGM (ligar/apagar salida programável)."""
-    
+
     SIREN_ON = 0x43
     """Comando 0x43 - Liga a sirene."""
-    
+
     SIREN_OFF = 0x63
     """Comando 0x63 - Desliga a sirene."""
-    
+
     STATUS_REQUEST_PARTIAL = 0x5A
     """Comando 0x5A - Solicita estado parcial da central (devuelve 43 bytes)."""
-    
+
     STATUS_REQUEST = 0x5B
     """Comando 0x5B - Solicita status completo da central (devuelve 54 bytes)."""
 
 
 class PGMAction(IntEnum):
     """Ações para controle de PGM."""
-    
+
     TURN_ON = 0x4C
     """Liga a PGM (0x4C = 'L')."""
-    
+
     TURN_OFF = 0x44
     """Desliga a PGM (0x44 = 'D')."""
 
 
 class PGMOutput(IntEnum):
     """Direccións de salida PGM (1 a 19)."""
-    
+
     PGM_1 = 0x31
     PGM_2 = 0x32
     PGM_3 = 0x33
@@ -106,17 +106,17 @@ class PGMOutput(IntEnum):
     PGM_17 = 0x41
     PGM_18 = 0x42
     PGM_19 = 0x43
-    
+
     @classmethod
     def from_number(cls, num: int) -> "PGMOutput":
         """Convierte número da PGM (1-19) para o enum.
-        
+
         Args:
             num: Número da PGM (1-19).
-            
+
         Returns:
             Valor do enum correspdondente.
-            
+
         Raises:
             ValueError: Si o número estiver fora do range válido.
         """
@@ -127,22 +127,22 @@ class PGMOutput(IntEnum):
 
 class PartitionCode(IntEnum):
     """Códigos de partición para comando de activación."""
-    
+
     ALL = 0x00
     """Ativa todas las particiones (NULL - sem sub-comando)."""
-    
+
     PARTITION_A = 0x41
     """Ativa partición A."""
-    
+
     PARTITION_B = 0x42
     """Ativa partición B."""
-    
+
     PARTITION_C = 0x43
     """Ativa partición C."""
-    
+
     PARTITION_D = 0x44
     """Ativa partición D."""
-    
+
     STAY_MODE = 0x50
     """Ativa no modo Stay."""
 
@@ -153,39 +153,39 @@ class PartitionCode(IntEnum):
 
 class ResponseCode(IntEnum):
     """Códigos de respuesta ISECMobile."""
-    
+
     # ACK - Sucesso
     ACK = 0xFE
     """Comando recibido e executado com éxito."""
-    
+
     # NACK - Erros
     NACK_INVALID_PACKET = 0xE0
     """Formato de pacote inválido."""
-    
+
     NACK_WRONG_PASSWORD = 0xE1
     """Contraseña incorreta."""
-    
+
     NACK_INVALID_COMMAND = 0xE2
     """Comando inválido."""
-    
+
     NACK_NOT_PARTITIONED = 0xE3
     """Central no particionada."""
-    
+
     NACK_ZONES_OPEN = 0xE4
     """Zonas abertas."""
-    
+
     NACK_DISCONTINUED = 0xE5
     """Comando descontinuado."""
-    
+
     NACK_NO_BYPASS_PERMISSION = 0xE6
     """Usuário sem permissão para bypass."""
-    
+
     NACK_NO_DEACTIVATE_PERMISSION = 0xE7
     """Usuário sem permissão para desarmar."""
-    
+
     NACK_BYPASS_NOT_ALLOWED = 0xE8
     """Bypass no permitido com a central ativada."""
-    
+
     NACK_NO_ZONES_IN_PARTITION = 0xEA
     """Partición sem zonas habilitadas."""
 
@@ -210,67 +210,66 @@ RESPONSE_MESSAGES: dict[int, str] = {
 
 
 def is_ack(response_code: int) -> bool:
-    """Verifica si o código de respuesta é ACK (éxito).
-    
+    """Verifica si el código de respuesta es ACK (éxito).
+
     Args:
         response_code: Código de respuesta recibido.
-        
+
     Returns:
-        True se for ACK, False de lo contrario.
+        True si es ACK, False de lo contrario.
     """
     return response_code == ResponseCode.ACK
 
 
 def is_nack(response_code: int) -> bool:
-    """Verifica si o código de respuesta é NACK (error).
-    
+    """Verifica si el código de respuesta es NACK (error).
+
     Args:
         response_code: Código de respuesta recibido.
-        
+
     Returns:
-        True se for NACK, False de lo contrario.
+        True si es NACK, False de lo contrario.
     """
     return 0xE0 <= response_code <= 0xEA
 
 
 def get_response_message(response_code: int) -> str:
-    """Obtiene a mensaje descriptiva para um código de respuesta.
-    
+    """Obtiene un mensaje descriptivo para un código de respuesta.
+
     Args:
         response_code: Código de respuesta recibido.
-        
+
     Returns:
-        Mensagem descriptiva do código ou "Código desconocido".
+        Mensaje descriptivo del código o "Código desconocido".
     """
     return RESPONSE_MESSAGES.get(response_code, f"Código desconocido: 0x{response_code:02X}")
 
 
 # =============================================================================
-# Modelos de Centrais
+# Modelos de Centrales de Alarma
 # =============================================================================
 
 class CentralModel(IntEnum):
-    """Modelos de centrais de alarme Intelbras."""
-    
+    """Modelos de centrales de alarma Intelbras."""
+
     AMT_2018_E = 0x1E
-    """AMT 2018 E/EG - Central de alarme monitorada."""
-    
+    """AMT 2018 E/EG - Central de alarma monitoreada."""
+
     AMT_4010 = 0x41
-    """AMT 4010 - Central de alarme monitorada."""
-    
+    """AMT 4010 - Central de alarma monitoreada."""
+
     @classmethod
     def get_name(cls, model_code: int) -> str:
-        """Devuelve o nome do modelo.
-        
+        """Devuelve el nombre del modelo.
+
         Args:
-            model_code: Código do modelo (hex).
-            
+            model_code: Código del modelo (hex).
+
         Returns:
-            Nome do modelo ou código hex se desconocido.
+            Nombre del modelo o código hex si es desconocido.
         """
         model_names = {
             cls.AMT_2018_E: "AMT 2018 E/EG",
             cls.AMT_4010: "AMT 4010",
         }
         return model_names.get(model_code, f"0x{model_code:02X}")
-

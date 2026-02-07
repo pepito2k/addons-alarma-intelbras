@@ -1,10 +1,7 @@
 """Intelbras AMT 2018 / 4010 - Protocolo ISECNet/ISECMobile.
 
-Este módulo implementa a comunicación com centrais de alarme Intelbras AMT
+Este módulo implementa la comunicación con centrales de alarma Intelbras AMT
 via protocolo ISECNet/ISECMobile sobre TCP.
 """
 
 __version__ = "0.1.0"
-
-
-
