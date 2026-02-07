@@ -11,6 +11,7 @@ from isecnet.protocol.commands import (
 )
 from isecnet.protocol.commands.status import CentralStatus, PartialCentralStatus
 from isecnet.server import AMTServer, AMTServerConfig
+from isecnet.const import ResponseCode
 
 
 class ISECNetProtocolHandler:
@@ -64,6 +65,17 @@ class ISECNetProtocolHandler:
             "DISARM_PARTITION_B": "DISARM_PART_B",
             "DISARM_PARTITION_C": "DISARM_PART_C",
             "DISARM_PARTITION_D": "DISARM_PART_D",
+        }
+        self._partition_fallback_commands = {
+            "ARM_HOME": "ARM_AWAY",
+            "ARM_PART_A": "ARM_AWAY",
+            "ARM_PART_B": "ARM_AWAY",
+            "ARM_PART_C": "ARM_AWAY",
+            "ARM_PART_D": "ARM_AWAY",
+            "DISARM_PART_A": "DISARM",
+            "DISARM_PART_B": "DISARM",
+            "DISARM_PART_C": "DISARM",
+            "DISARM_PART_D": "DISARM",
         }
 
     def validate_startup(self, alarm_ip, mqtt_broker):
@@ -161,10 +173,21 @@ class ISECNetProtocolHandler:
                 logging.warning(f"Comando no reconocido: {command}")
                 return
 
-            action()
+            response = action()
+            if response and response.is_error:
+                logging.warning(
+                    f"ISECNet rechazó comando {command_key}: {response.message} "
+                    f"(0x{response.code:02X})"
+                )
+                if response.code == ResponseCode.NACK_NOT_PARTITIONED:
+                    self._try_not_partitioned_fallback(command_key)
+                return
+
             logging.info(f"Comando ejecutado por ISECNet: {command_key}")
         except CommunicationError as exc:
             logging.error(f"Error de comunicación en comando: {exc}")
+        except Exception as exc:
+            logging.error(f"Error inesperado ejecutando comando {command_key}: {exc}")
 
     def shutdown(self):
         if not self.server or not self.loop:
@@ -226,6 +249,26 @@ class ISECNetProtocolHandler:
     def _normalize_command(self, command):
         key = str(command).strip().upper().replace("-", "_").replace(" ", "_")
         return self._command_aliases.get(key, key)
+
+    def _try_not_partitioned_fallback(self, command_key):
+        fallback_key = self._partition_fallback_commands.get(command_key)
+        if not fallback_key:
+            return
+        fallback_action = self._command_actions.get(fallback_key)
+        if fallback_action is None:
+            return
+
+        logging.info(
+            f"Reintentando comando en modo no particionado: {command_key} -> {fallback_key}"
+        )
+        fallback_response = fallback_action()
+        if fallback_response and fallback_response.is_error:
+            logging.warning(
+                f"Fallback ISECNet también rechazado: {fallback_response.message} "
+                f"(0x{fallback_response.code:02X})"
+            )
+            return
+        logging.info(f"Fallback ejecutado por ISECNet: {fallback_key}")
 
     def _publish_status(self, status):
         self.mqtt_client.publish(f"{self.base_topic}/model", self._model_name(status.model), retain=True)
