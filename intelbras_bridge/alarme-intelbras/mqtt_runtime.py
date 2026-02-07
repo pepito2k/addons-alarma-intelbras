@@ -60,8 +60,11 @@ class MQTTRuntime:
             logging.error(f"Fallo al conectar a MQTT: {reason_code}")
 
     def on_message(self, client, userdata, msg):
-        command = msg.payload.decode()
+        command = msg.payload.decode(errors="ignore").strip()
         logging.info(f"Comando MQTT recibido: '{command}'")
+        if not command:
+            logging.warning("Comando MQTT vacío, ignorado.")
+            return
         with self.alarm_lock:
             protocol_handler = self.protocol_handler_getter()
             if protocol_handler is None:

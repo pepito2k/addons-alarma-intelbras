@@ -55,6 +55,16 @@ class ISECNetProtocolHandler:
             "DISARM_PART_D": lambda: self._send_command(DeactivationCommand.disarm_partition_d(self.alarm_pass)),
             "DISARM": lambda: self._send_command(DeactivationCommand.disarm_all(self.alarm_pass)),
         }
+        self._command_aliases = {
+            "ARM_PARTITION_A": "ARM_PART_A",
+            "ARM_PARTITION_B": "ARM_PART_B",
+            "ARM_PARTITION_C": "ARM_PART_C",
+            "ARM_PARTITION_D": "ARM_PART_D",
+            "DISARM_PARTITION_A": "DISARM_PART_A",
+            "DISARM_PARTITION_B": "DISARM_PART_B",
+            "DISARM_PARTITION_C": "DISARM_PART_C",
+            "DISARM_PARTITION_D": "DISARM_PART_D",
+        }
 
     def validate_startup(self, alarm_ip, mqtt_broker):
         if not all([self.alarm_pass, mqtt_broker]):
@@ -74,7 +84,7 @@ class ISECNetProtocolHandler:
         async def _on_connect(conn):
             self.connection_id = conn.id
             logging.info(f"Central AMT conectada (ISECNet): {conn.id}")
-            threading.Thread(target=self.poll_status, daemon=True).start()
+            threading.Thread(target=self._poll_status_after_connect, daemon=True).start()
 
         @self.server.on_disconnect
         async def _on_disconnect(conn):
@@ -134,23 +144,25 @@ class ISECNetProtocolHandler:
             logging.warning(f"Error durante sondeo ISECNet: {exc}.")
 
     def handle_command(self, command):
+        command_key = self._normalize_command(command)
         if not self._ensure_connected():
             logging.error("No hay conexión ISECNet activa, comando no ejecutado.")
             return
 
         try:
-            if command == "PANIC":
+            if command_key == "PANIC":
                 logging.info("¡Activando pánico audible desde Home Assistant!")
                 self._send_command(SirenCommand.turn_on_siren(self.alarm_pass))
                 self._schedule_siren_off(30.0)
                 return
 
-            action = self._command_actions.get(command)
+            action = self._command_actions.get(command_key)
             if action is None:
                 logging.warning(f"Comando no reconocido: {command}")
                 return
 
             action()
+            logging.info(f"Comando ejecutado por ISECNet: {command_key}")
         except CommunicationError as exc:
             logging.error(f"Error de comunicación en comando: {exc}")
 
@@ -174,6 +186,10 @@ class ISECNetProtocolHandler:
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self.server.start())
         self.loop.run_forever()
+
+    def _poll_status_after_connect(self):
+        with self.alarm_lock:
+            self.poll_status()
 
     def _ensure_connected(self):
         return self.connection_id is not None
@@ -206,6 +222,10 @@ class ISECNetProtocolHandler:
                     logging.warning(f"No se pudo apagar la sirena automáticamente: {exc}")
 
         threading.Timer(delay_seconds, _safe_turn_off).start()
+
+    def _normalize_command(self, command):
+        key = str(command).strip().upper().replace("-", "_").replace(" ", "_")
+        return self._command_aliases.get(key, key)
 
     def _publish_status(self, status):
         self.mqtt_client.publish(f"{self.base_topic}/model", self._model_name(status.model), retain=True)
