@@ -7,19 +7,19 @@ from alarmeitbl.comandos import *
 from alarmeitbl.tratador_fotos import *
 
 def usage():
-    print("Modo de usar: %s <ipaddr> <porta> <senha> <tam. senha> <comando> [params]" % sys.argv[0])
+    print("Modo de uso: %s <ipaddr> <porta> <senha> <tam. senha> <comando> [params]" % sys.argv[0])
     print()
     print("Comandos disponíveis:", ", ".join(tratadores.keys()))
     print()
-    print("ativar/desativar: parametro opcional de particao (omitir para todas particoes)")
-    print("idem para desligarsirene")
+    print("activar/desactivar: parametro opcional de partición (omitir para todas particiones)")
+    print("igual para desligarsirene")
     print("cancelarzona/reativarzona: parametro obrigatorio de zona")
     print("dlfoto: parametros obrigatorios de indice e foto")
     sys.exit(1)
 
 tratadores = { 'desativar': DesativarCentral,
                 'ativar': AtivarCentral,
-                'desligarsirene': DesligarSirene,
+                'desligarsirene': DesligarSirena,
                 'cancelarzona': CancelarZona,
                 'reativarzona': ReativarZona,
                 'status': SolicitarStatus,
@@ -32,7 +32,7 @@ if len(sys.argv) < 6:
     usage()
 ipaddr = sys.argv[1].lower().strip()
 if ipaddr == 'auto':
-    print("Para este fim, a config. caddr deve conter um endereço IP explícito.")
+    print("Para este fin, la config. caddr debe contener una dirección IP explícita.")
     usage()
 cport = int(sys.argv[2]) or 9009
 senha = int(sys.argv[3])
@@ -54,13 +54,13 @@ if comando == 'dlfoto':
     ev.loop()
     sys.exit(0)
 
-particao_ou_zona = None
+particion_ou_zona = None
 if len(sys.argv) == 7:
     try:
-        particao_ou_zona = int(sys.argv[6])
+        particion_ou_zona = int(sys.argv[6])
     except ValueError:
-        particao_ou_zona = -1
-    if particao_ou_zona < 1 or particao_ou_zona > 254:
+        particion_ou_zona = -1
+    if particion_ou_zona < 1 or particion_ou_zona > 254:
         usage()
 
 class Observer:
@@ -74,7 +74,7 @@ class Observer:
 
 observer = Observer()
 
-tratador = tratadores[comando](observer, ipaddr, cport, senha, tam_senha, [particao_ou_zona])
+tratador = tratadores[comando](observer, ipaddr, cport, senha, tam_senha, [particion_ou_zona])
 
 ev = EventLoop()
 ev.loop()

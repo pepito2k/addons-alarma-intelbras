@@ -1,14 +1,14 @@
-"""Comando de Controle PGM (0x50) - Ligar/Desligar saídas programáveis.
+"""Comando de Controle PGM (0x50) - Ligar/Desligar salidas programáveis.
 
-Este comando controla as saídas PGM (Programmable Gate Module) da central.
+Este comando controla as salidas PGM (Programmable Gate Module) da central.
 
-Estrutura do comando:
+Estructura do comando:
     - Código: 0x50
-    - Conteúdo: 2 bytes
+    - Contenido: 2 bytes
         - Byte 1 (Sub Comando):
             - 0x4C ('L'): Liga a PGM
             - 0x44 ('D'): Desliga a PGM
-        - Byte 2 (Endereço de Saída):
+        - Byte 2 (Dirección de Saída):
             - 0x31: PGM 1
             - 0x32: PGM 2
             - ...
@@ -16,10 +16,10 @@ Estrutura do comando:
             - 0x43: PGM 19
 
 Exemplos da documentação:
-    Ligar PGM 1 com senha 1234:
+    Ligar PGM 1 com contraseña 1234:
         0A E9 21 31 32 33 34 50 4C 31 21 35
     
-    Desligar PGM 1 com senha 1234:
+    Desligar PGM 1 com contraseña 1234:
         0A E9 21 31 32 33 34 50 44 32 21 3E
 """
 
@@ -30,10 +30,10 @@ from .base import Command
 
 
 class PGMCommand(Command):
-    """Comando para controlar saídas PGM da central.
+    """Comando para controlar salidas PGM da central.
     
     Attributes:
-        action: Ação a executar (ligar/desligar).
+        action: Ação a executar (ligar/apagar).
         output: Número da PGM a controlar (1-19).
     """
 
@@ -43,17 +43,17 @@ class PGMCommand(Command):
         action: PGMAction,
         output: int | PGMOutput,
     ) -> None:
-        """Inicializa o comando de controle PGM.
+        """Inicializa el comando de controle PGM.
         
         Args:
-            password: Senha do usuário (4-6 dígitos).
+            password: Contraseña do usuario (4-6 dígitos).
             action: Ação a executar (TURN_ON ou TURN_OFF).
             output: Número da PGM (1-19) ou PGMOutput enum.
         """
         super().__init__(password)
         self._action = action
         
-        # Converte número para enum se necessário
+        # Convierte número para enum se necesario
         if isinstance(output, PGMOutput):
             self._output = output
         else:
@@ -80,10 +80,10 @@ class PGMCommand(Command):
         return self._output.value - 0x30
 
     def build_content(self) -> bytes:
-        """Constrói o conteúdo do comando.
+        """Construye o contenido do comando.
         
         Returns:
-            2 bytes: [sub_comando, endereço_saída]
+            2 bytes: [sub_comando, dirección_salida]
         """
         return bytes([self._action.value, self._output.value])
 
@@ -92,24 +92,24 @@ class PGMCommand(Command):
         """Cria comando para ligar uma PGM.
         
         Args:
-            password: Senha do usuário.
+            password: Contraseña do usuario.
             pgm_number: Número da PGM (1-19).
             
         Returns:
-            Instância de PGMCommand.
+            Instancia de PGMCommand.
         """
         return cls(password, PGMAction.TURN_ON, pgm_number)
 
     @classmethod
     def turn_off(cls, password: str, pgm_number: int) -> Self:
-        """Cria comando para desligar uma PGM.
+        """Cria comando para apagar uma PGM.
         
         Args:
-            password: Senha do usuário.
+            password: Contraseña do usuario.
             pgm_number: Número da PGM (1-19).
             
         Returns:
-            Instância de PGMCommand.
+            Instancia de PGMCommand.
         """
         return cls(password, PGMAction.TURN_OFF, pgm_number)
 

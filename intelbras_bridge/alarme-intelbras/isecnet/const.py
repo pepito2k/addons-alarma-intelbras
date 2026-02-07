@@ -4,14 +4,14 @@ from enum import IntEnum
 
 
 # =============================================================================
-# Configurações de Rede
+# Configuraciones de Rede
 # =============================================================================
 
 DEFAULT_PORT = 9009
-"""Porta TCP padrão para comunicação ISECNet."""
+"""Porta TCP predeterminado para comunicación ISECNet."""
 
 RESPONSE_TIMEOUT = 8.0
-"""Timeout máximo em segundos para aguardar resposta da central (Ethernet)."""
+"""Timeout máximo em segundos para esperar respuesta da central (Ethernet)."""
 
 KEEPALIVE_INTERVAL = 30.0
 """Intervalo em segundos para envio de keep-alive."""
@@ -36,13 +36,13 @@ ISECMOBILE_FRAME_DELIMITER = 0x21
 """Delimitador de frame ISECMobile (caractere '!')."""
 
 ISECMOBILE_PASSWORD_MIN_LEN = 4
-"""Tamanho mínimo da senha em bytes."""
+"""Tamaño mínimo da contraseña em bytes."""
 
 ISECMOBILE_PASSWORD_MAX_LEN = 6
-"""Tamanho máximo da senha em bytes."""
+"""Tamaño máximo da contraseña em bytes."""
 
 ISECMOBILE_CONTENT_MAX_LEN = 52
-"""Tamanho máximo do conteúdo em bytes."""
+"""Tamaño máximo do contenido em bytes."""
 
 
 # =============================================================================
@@ -53,13 +53,13 @@ class CommandCode(IntEnum):
     """Códigos de comandos ISECMobile."""
     
     ACTIVATION = 0x41
-    """Comando 0x41 - Ativação/Armar da central ou partição."""
+    """Comando 0x41 - Activación/Armar da central ou partición."""
     
     DEACTIVATION = 0x44
-    """Comando 0x44 - Desativação/Desarmar da central ou partição."""
+    """Comando 0x44 - Desactivación/Desarmar da central ou partición."""
     
     PGM_CONTROL = 0x50
-    """Comando 0x50 - Controle de PGM (ligar/desligar saída programável)."""
+    """Comando 0x50 - Controle de PGM (ligar/apagar salida programável)."""
     
     SIREN_ON = 0x43
     """Comando 0x43 - Liga a sirene."""
@@ -68,10 +68,10 @@ class CommandCode(IntEnum):
     """Comando 0x63 - Desliga a sirene."""
     
     STATUS_REQUEST_PARTIAL = 0x5A
-    """Comando 0x5A - Solicita status parcial da central (retorna 43 bytes)."""
+    """Comando 0x5A - Solicita estado parcial da central (devuelve 43 bytes)."""
     
     STATUS_REQUEST = 0x5B
-    """Comando 0x5B - Solicita status completo da central (retorna 54 bytes)."""
+    """Comando 0x5B - Solicita status completo da central (devuelve 54 bytes)."""
 
 
 class PGMAction(IntEnum):
@@ -85,7 +85,7 @@ class PGMAction(IntEnum):
 
 
 class PGMOutput(IntEnum):
-    """Endereços de saída PGM (1 a 19)."""
+    """Direccións de salida PGM (1 a 19)."""
     
     PGM_1 = 0x31
     PGM_2 = 0x32
@@ -109,16 +109,16 @@ class PGMOutput(IntEnum):
     
     @classmethod
     def from_number(cls, num: int) -> "PGMOutput":
-        """Converte número da PGM (1-19) para o enum.
+        """Convierte número da PGM (1-19) para o enum.
         
         Args:
             num: Número da PGM (1-19).
             
         Returns:
-            Valor do enum correspondente.
+            Valor do enum correspdondente.
             
         Raises:
-            ValueError: Se o número estiver fora do range válido.
+            ValueError: Si o número estiver fora do range válido.
         """
         if num < 1 or num > 19:
             raise ValueError(f"Número de PGM inválido: {num}. Deve ser entre 1 e 19.")
@@ -126,22 +126,22 @@ class PGMOutput(IntEnum):
 
 
 class PartitionCode(IntEnum):
-    """Códigos de partição para comando de ativação."""
+    """Códigos de partición para comando de activación."""
     
     ALL = 0x00
-    """Ativa todas as partições (NULL - sem sub-comando)."""
+    """Ativa todas las particiones (NULL - sem sub-comando)."""
     
     PARTITION_A = 0x41
-    """Ativa partição A."""
+    """Ativa partición A."""
     
     PARTITION_B = 0x42
-    """Ativa partição B."""
+    """Ativa partición B."""
     
     PARTITION_C = 0x43
-    """Ativa partição C."""
+    """Ativa partición C."""
     
     PARTITION_D = 0x44
-    """Ativa partição D."""
+    """Ativa partición D."""
     
     STAY_MODE = 0x50
     """Ativa no modo Stay."""
@@ -152,24 +152,24 @@ class PartitionCode(IntEnum):
 # =============================================================================
 
 class ResponseCode(IntEnum):
-    """Códigos de resposta ISECMobile."""
+    """Códigos de respuesta ISECMobile."""
     
     # ACK - Sucesso
     ACK = 0xFE
-    """Comando recebido e executado com sucesso."""
+    """Comando recibido e executado com éxito."""
     
     # NACK - Erros
     NACK_INVALID_PACKET = 0xE0
     """Formato de pacote inválido."""
     
     NACK_WRONG_PASSWORD = 0xE1
-    """Senha incorreta."""
+    """Contraseña incorreta."""
     
     NACK_INVALID_COMMAND = 0xE2
     """Comando inválido."""
     
     NACK_NOT_PARTITIONED = 0xE3
-    """Central não particionada."""
+    """Central no particionada."""
     
     NACK_ZONES_OPEN = 0xE4
     """Zonas abertas."""
@@ -181,68 +181,68 @@ class ResponseCode(IntEnum):
     """Usuário sem permissão para bypass."""
     
     NACK_NO_DEACTIVATE_PERMISSION = 0xE7
-    """Usuário sem permissão para desativar."""
+    """Usuário sem permissão para desarmar."""
     
     NACK_BYPASS_NOT_ALLOWED = 0xE8
-    """Bypass não permitido com a central ativada."""
+    """Bypass no permitido com a central ativada."""
     
     NACK_NO_ZONES_IN_PARTITION = 0xEA
-    """Partição sem zonas habilitadas."""
+    """Partición sem zonas habilitadas."""
 
 
 # =============================================================================
-# Mapeamento de mensagens de erro
+# Mapeo de mensajes de error
 # =============================================================================
 
 RESPONSE_MESSAGES: dict[int, str] = {
-    ResponseCode.ACK: "Comando executado com sucesso",
+    ResponseCode.ACK: "Comando executado com éxito",
     ResponseCode.NACK_INVALID_PACKET: "Formato de pacote inválido",
-    ResponseCode.NACK_WRONG_PASSWORD: "Senha incorreta",
+    ResponseCode.NACK_WRONG_PASSWORD: "Contraseña incorreta",
     ResponseCode.NACK_INVALID_COMMAND: "Comando inválido",
-    ResponseCode.NACK_NOT_PARTITIONED: "Central não particionada",
+    ResponseCode.NACK_NOT_PARTITIONED: "Central no particionada",
     ResponseCode.NACK_ZONES_OPEN: "Zonas abertas",
     ResponseCode.NACK_DISCONTINUED: "Comando descontinuado",
     ResponseCode.NACK_NO_BYPASS_PERMISSION: "Usuário sem permissão para bypass",
-    ResponseCode.NACK_NO_DEACTIVATE_PERMISSION: "Usuário sem permissão para desativar",
-    ResponseCode.NACK_BYPASS_NOT_ALLOWED: "Bypass não permitido com a central ativada",
-    ResponseCode.NACK_NO_ZONES_IN_PARTITION: "Partição sem zonas habilitadas",
+    ResponseCode.NACK_NO_DEACTIVATE_PERMISSION: "Usuário sem permissão para desarmar",
+    ResponseCode.NACK_BYPASS_NOT_ALLOWED: "Bypass no permitido com a central ativada",
+    ResponseCode.NACK_NO_ZONES_IN_PARTITION: "Partición sem zonas habilitadas",
 }
 
 
 def is_ack(response_code: int) -> bool:
-    """Verifica se o código de resposta é ACK (sucesso).
+    """Verifica si o código de respuesta é ACK (éxito).
     
     Args:
-        response_code: Código de resposta recebido.
+        response_code: Código de respuesta recibido.
         
     Returns:
-        True se for ACK, False caso contrário.
+        True se for ACK, False de lo contrario.
     """
     return response_code == ResponseCode.ACK
 
 
 def is_nack(response_code: int) -> bool:
-    """Verifica se o código de resposta é NACK (erro).
+    """Verifica si o código de respuesta é NACK (error).
     
     Args:
-        response_code: Código de resposta recebido.
+        response_code: Código de respuesta recibido.
         
     Returns:
-        True se for NACK, False caso contrário.
+        True se for NACK, False de lo contrario.
     """
     return 0xE0 <= response_code <= 0xEA
 
 
 def get_response_message(response_code: int) -> str:
-    """Obtém a mensagem descritiva para um código de resposta.
+    """Obtiene a mensaje descriptiva para um código de respuesta.
     
     Args:
-        response_code: Código de resposta recebido.
+        response_code: Código de respuesta recibido.
         
     Returns:
-        Mensagem descritiva do código ou "Código desconhecido".
+        Mensagem descriptiva do código ou "Código desconocido".
     """
-    return RESPONSE_MESSAGES.get(response_code, f"Código desconhecido: 0x{response_code:02X}")
+    return RESPONSE_MESSAGES.get(response_code, f"Código desconocido: 0x{response_code:02X}")
 
 
 # =============================================================================
@@ -260,13 +260,13 @@ class CentralModel(IntEnum):
     
     @classmethod
     def get_name(cls, model_code: int) -> str:
-        """Retorna o nome do modelo.
+        """Devuelve o nome do modelo.
         
         Args:
             model_code: Código do modelo (hex).
             
         Returns:
-            Nome do modelo ou código hex se desconhecido.
+            Nome do modelo ou código hex se desconocido.
         """
         model_names = {
             cls.AMT_2018_E: "AMT 2018 E/EG",

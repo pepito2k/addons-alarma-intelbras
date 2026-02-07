@@ -7,7 +7,7 @@ class UtilsProtocolo:
         return ", ".join(["%02x" % n for n in buf])
 
     # Calcula checksum de frame longo
-    # Presume que "dados" contém o byte de comprimento mas não contém o byte de checksum
+    # Presume que "dados" contém o byte de comprimento mas no contém o byte de checksum
     def checksum(self, dados):
         checksum = 0
         for n in dados:
@@ -29,7 +29,7 @@ class UtilsProtocolo:
             elif digito >= 0x01 and digito <= 0x09:
                 numero += posicao * digito
             else:
-                Log.warn("valor contact id invalido", self.hexprint(dados))
+                Log.warn("valor contact id inválido", self.hexprint(dados))
                 return -1
             posicao *= 10
         return numero
@@ -48,7 +48,7 @@ class UtilsProtocolo:
     
     def bcd(self, n):
         if n > 99 or n < 0:
-            Log.warn("valor invalido para BCD: %02x" % n)
+            Log.warn("valor inválido para BCD: %02x" % n)
             return 0
         return ((n // 10) << 4) + (n % 10)
     
@@ -77,7 +77,7 @@ class UtilsProtocolo:
         dst_id = self.be16(0x0000)
         # ID nosso, pode ser qualquer número, devolvido nos pacotes de retorno
         # Possivelmente uma relíquia de canais seriais onde múltiplos receptores
-        # ouvem as mensagens, e dst_id ajudaria a identificar o recipiente
+        # ouvem as mensajes, e dst_id ajudaria a identificar o recipiente
         src_id = self.be16(0x8fff)
         length = self.be16(len(payload) + 2)
         cmd_enc = self.be16(cmd)
@@ -94,7 +94,7 @@ class UtilsProtocolo:
         return self.pacote_isecnet2(0xf0f0, payload)
 
     # Retorna o comprimento de um pacote, se houver um pacote completo no buffer
-    # Se não, retorna 0
+    # Se no, retorna 0
     def pacote_isecnet2_completo(self, data):
         # Um pacote tem tamanho mínimo 9 (src_id, dst_id, len, cmd, checksum)
         if len(data) < 9:

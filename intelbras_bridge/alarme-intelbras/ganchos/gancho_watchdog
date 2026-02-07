@@ -10,6 +10,6 @@
 #
 # Recomendamos usar um serviço como healthchecks.io,
 # especialmente desenhado para monitorar serviços de
-# execução periódica.
+# ejecución periódica.
 
 date >> gancho_watchdog.txt

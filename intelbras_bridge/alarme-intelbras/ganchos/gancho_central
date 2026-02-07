@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# Gancho para evento de central não conectada.
+# Gancho para evento de central no conectada.
 #
 # Em geral, espera-se que uma central de alarme esteja conectada
 # o tempo todo ao Receptor IP (a central tem bateria e pode ter
-# um chip de celular instalado). A falta de conexão indica um
+# um chip de celular instalado). A falta de conexión indica um
 # problema continuado de rede ou de falta de energia (quiçá 
 # propositado).
 #
@@ -12,7 +12,7 @@
 # seja encaminhado usando o mesmo canal utilizado para disparos
 # de alarme.
 #
-# Parâmetro $1: 1 para central não conectada, 0 quando o problema
+# Parâmetro $1: 1 para central no conectada, 0 quando o problema
 #               deixou de existir (i.e. a central reconectou)
 
 if [ "$1" = "1" ]; then

@@ -1,7 +1,7 @@
 """Cálculo de checksum e CRC para protocolos ISECNet/ISECProgram.
 
 ISECNet usa checksum XOR de 1 byte:
-    - XOR de todos os bytes, depois XOR com 0xFF
+    - XOR de todos los bytes, depois XOR com 0xFF
 
 ISECProgram usa CRC-16/CCITT-FALSE de 2 bytes:
     - Polinômio 0x8005, valor inicial 0x0000
@@ -13,9 +13,9 @@ class Checksum:
 
     @staticmethod
     def calculate(data: bytes | bytearray) -> int:
-        """Calcula o checksum de um pacote de dados.
+        """Calcula o checksum de um pacote de datos.
         
-        O algoritmo faz XOR de todos os bytes e inverte o resultado
+        El algoritmo faz XOR de todos los bytes e inverte o resultado
         com XOR 0xFF.
         
         Args:
@@ -36,20 +36,20 @@ class Checksum:
 
     @staticmethod
     def verify(data: bytes | bytearray, expected_checksum: int) -> bool:
-        """Verifica se o checksum de um pacote está correto.
+        """Verifica si o checksum de um pacote está correto.
         
         Args:
             data: Bytes do pacote (sem o checksum).
             expected_checksum: Checksum esperado.
             
         Returns:
-            True se o checksum está correto, False caso contrário.
+            True se o checksum está correto, False de lo contrario.
         """
         return Checksum.calculate(data) == expected_checksum
 
     @staticmethod
     def append(data: bytes | bytearray) -> bytes:
-        """Calcula e anexa o checksum ao final dos dados.
+        """Calcula e anexa o checksum ao final de los datos.
         
         Args:
             data: Bytes do pacote (sem o checksum).
@@ -59,20 +59,20 @@ class Checksum:
             
         Example:
             >>> Checksum.append(bytes([0x08, 0xE9, 0x21, 0x31, 0x32, 0x33, 0x34, 0x41, 0x21]))
-            b'\\x08\\xe9!1234A!['  # Com 0x5B no final
+            b'\\x08\\xe9!1234A!['  # Com 0x5B al final
         """
         checksum = Checksum.calculate(data)
         return bytes(data) + bytes([checksum])
 
     @staticmethod
     def validate_packet(packet: bytes | bytearray) -> bool:
-        """Valida um pacote completo (dados + checksum).
+        """Valida um pacote completo (datos + checksum).
         
         Args:
-            packet: Pacote completo incluindo o byte de checksum no final.
+            packet: Pacote completo incluindo o byte de checksum al final.
             
         Returns:
-            True se o pacote é válido, False caso contrário.
+            True se o pacote é válido, False de lo contrario.
         """
         if len(packet) < 2:
             return False
@@ -91,7 +91,7 @@ class CRC16:
 
     @staticmethod
     def calculate(data: bytes | bytearray) -> int:
-        """Calcula o CRC-16 de um buffer de dados.
+        """Calcula o CRC-16 de um buffer de datos.
         
         Args:
             data: Bytes para calcular o CRC.
@@ -101,7 +101,7 @@ class CRC16:
             
         Example:
             >>> CRC16.calculate(b"\\x01\\x02\\x03")
-            # Retorna o CRC-16 calculado
+            # Devuelve o CRC-16 calculado
         """
         crc = 0x0000
         
@@ -117,7 +117,7 @@ class CRC16:
 
     @staticmethod
     def calculate_bytes(data: bytes | bytearray) -> bytes:
-        """Calcula o CRC-16 e retorna como 2 bytes (big-endian).
+        """Calcula o CRC-16 e devuelve como 2 bytes (big-endian).
         
         Args:
             data: Bytes para calcular o CRC.
@@ -130,7 +130,7 @@ class CRC16:
 
     @staticmethod
     def append(data: bytes | bytearray) -> bytes:
-        """Calcula e anexa o CRC-16 ao final dos dados.
+        """Calcula e anexa o CRC-16 ao final de los datos.
         
         Args:
             data: Bytes do pacote.
@@ -143,7 +143,7 @@ class CRC16:
 
     @staticmethod
     def verify(data: bytes | bytearray, expected_crc: int) -> bool:
-        """Verifica se o CRC-16 está correto.
+        """Verifica si o CRC-16 está correto.
         
         Args:
             data: Bytes do pacote (sem CRC).
@@ -156,10 +156,10 @@ class CRC16:
 
     @staticmethod
     def validate_packet(packet: bytes | bytearray) -> bool:
-        """Valida um pacote completo (dados + CRC de 2 bytes).
+        """Valida um pacote completo (datos + CRC de 2 bytes).
         
         Args:
-            packet: Pacote completo incluindo os 2 bytes de CRC no final.
+            packet: Pacote completo incluindo los 2 bytes de CRC al final.
             
         Returns:
             True se o pacote é válido.

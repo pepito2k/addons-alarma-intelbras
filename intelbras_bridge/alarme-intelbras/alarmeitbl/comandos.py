@@ -66,7 +66,7 @@ class ComandarCentral(TCPClientHandler, UtilsProtocolo):
         self.log_debug("Resposta %04x" % cmd)
 
         if not self.tratador:
-            self.log_info("Sem tratador")
+            self.log_info("Sin tratador")
             self.destroy()
             return
 
@@ -79,27 +79,27 @@ class ComandarCentral(TCPClientHandler, UtilsProtocolo):
             return
 
         if cmd != 0xf0f0:
-            self.log_info("Autenticacao: resp inesperada %04x" % cmd)
+            self.log_info("Autenticación: resp inesperada %04x" % cmd)
             self.destroy()
             return
 
         if len(payload) != 1:
-            self.log_info("Autenticacao: resposta invalida")
+            self.log_info("Autenticación: respuesta inválida")
             self.destroy()
             return
 
         resposta = payload[0]
         # Possíveis respostas:
-        # 01 = senha incorreta
-        # 02 = versão software incorreta
+        # 01 = senha incorrecta
+        # 02 = versión software incorrecta
         # 03 = painel chamará de volta (?)
-        # 04 = aguardando permissão de usuário (?)
+        # 04 = esperando permissão de usuario (?)
         if resposta > 0:
-            self.log_info("Autenticacao: falhou motivo %d" % resposta)
+            self.log_info("Autenticación: falló motivo %d" % resposta)
             self.destroy()
             return
 
-        self.log_debug("Autenticacao ok")
+        self.log_debug("Autenticación ok")
         self.envia_comando_in()
 
     def envia_comando(self, cmd, payload, tratador_in):
@@ -119,12 +119,12 @@ class ComandarCentral(TCPClientHandler, UtilsProtocolo):
             return
 
         if cmd == 0xf0f7:
-            self.log_info("Erro central ocupada")
+            self.log_info("Error central ocupada")
             self.destroy()
             return
 
         if cmd != self.cmd and cmd != 0xf0fe:
-            self.log_info("Resposta inesperada %04x" % cmd)
+            self.log_info("Respuesta inesperada %04x" % cmd)
             self.destroy()
             return
 
@@ -140,11 +140,11 @@ class ComandarCentral(TCPClientHandler, UtilsProtocolo):
         # Reportar sucesso ao observador
         self.status = 0
         self.conn_timeout.restart()
-        # Resposta esperada: central fechar conexão
+        # Resposta esperada: central cerrar conexión
 
     def nak(self, payload):
         if len(payload) != 1:
-            self.log_info("NAK invalido")
+            self.log_info("NAK inválido")
         else:
             motivo = payload[0]
             self.log_info("NAK motivo %02x" % motivo)
@@ -155,16 +155,16 @@ class ComandarCentral(TCPClientHandler, UtilsProtocolo):
 class AtivarDesativarCentral(ComandarCentral):
     def __init__(self, observer, ip_addr, cport, senha, tam_senha, extra, subcmd):
         super().__init__(observer, ip_addr, cport, senha, tam_senha, extra)
-        self.particao = extra[0]
+        self.partición = extra[0]
         self.subcmd = subcmd
 
     def envia_comando_in(self):
-        # byte 1: particao (0x01 = 1, 0xff = todas ou sem particao)
+        # byte 1: partición (0x01 = 1, 0xff = todas ou sem partición)
         # byte 2: 0x00 desarmar, 0x01 armar, 0x02 stay
-        if self.particao is None:
+        if self.partición is None:
             payload = [ 0xff, self.subcmd ]
         else:
-            payload = [ self.particao, self.subcmd ]
+            payload = [ self.partición, self.subcmd ]
         self.envia_comando(0x401e, payload, self.resposta_comando_in)
 
     def resposta_comando_in(self, payload):
@@ -179,16 +179,16 @@ class AtivarCentral(AtivarDesativarCentral):
         super().__init__(observer, ip_addr, cport, senha, tam_senha, extra, 0x01)
 
 
-class DesligarSirene(ComandarCentral):
+class DesligarSirena(ComandarCentral):
     def __init__(self, observer, ip_addr, cport, senha, tam_senha, extra):
         super().__init__(observer, ip_addr, cport, senha, tam_senha, extra)
-        self.particao = extra[0]
+        self.partición = extra[0]
 
     def envia_comando_in(self):
-        if self.particao is None:
+        if self.partición is None:
             payload = [ 0xff ]
         else:
-            payload = [ self.particao]
+            payload = [ self.partición]
         self.envia_comando(0x4019, payload, self.resposta_comando_in)
 
     def resposta_comando_in(self, payload):
@@ -245,40 +245,40 @@ class SolicitarStatus(ComandarCentral):
         self.envia_comando(0x0b4a, [], self.resposta_comando_in)
 
     def resposta_comando_in(self, payload):
-        # Documentação é base 1
+        # Documentación é base 1
         payload = [0] + payload
         print()
         print("*******************************************")
         if payload[1] == 0x01:
             print("Central AMT-8000")
         else:
-            print("Central de tipo desconhecido")
-        print("Versão de firmware %d.%d.%d" % tuple(payload[2:5]))
-        print("Status geral: ")
-        armado = {0x00: "Desarmado", 0x01: "Partição(ões) armada(s)", 0x03: "Todas partições armadas"}
+            print("Central de tipo desconocido")
+        print("Versión de firmware %d.%d.%d" % tuple(payload[2:5]))
+        print("Estado general: ")
+        armado = {0x00: "Desarmado", 0x01: "Partición(es) armada(s)", 0x03: "Todas las particiones armadas"}
         print("\t" + armado[((payload[21] >> 5) & 0x03)])
-        print("\tZonas em alarme:", (payload[21] & 0x8) and "Sim" or "Não")
-        print("\tZonas canceladas:", (payload[21] & 0x10) and "Sim" or "Não")
-        print("\tTodas zonas fechadas:", (payload[21] & 0x4) and "Sim" or "Não")
-        print("\tSirene:", (payload[21] & 0x2) and "Sim" or "Não")
-        print("\tProblemas:", (payload[21] & 0x1) and "Sim" or "Não")
-        for particao in range(0, 17):
-            habilitado = payload[22 + particao] & 0x80
+        print("\tZonas en alarma:", (payload[21] & 0x8) and "Sí" or "No")
+        print("\tZonas canceladas:", (payload[21] & 0x10) and "Sí" or "No")
+        print("\tTodas las zonas cerradas:", (payload[21] & 0x4) and "Sí" or "No")
+        print("\tSirena:", (payload[21] & 0x2) and "Sí" or "No")
+        print("\tProblemas:", (payload[21] & 0x1) and "Sí" or "No")
+        for partición in range(0, 17):
+            habilitado = payload[22 + partición] & 0x80
             if not habilitado:
                 continue
-            print("Partição %02d:" % particao)
-            print("\tStay:", (payload[22 + particao] & 0x40) and "Sim" or "Não")
-            print("\tDelay de saída:", (payload[22 + particao] & 0x20) and "Sim" or "Não")
-            print("\tPronto para armar:", (payload[22 + particao] & 0x10) and "Sim" or "Não")
-            print("\tAlame ocorreu:", (payload[22 + particao] & 0x08) and "Sim" or "Não")
-            print("\tEm alarme:", (payload[22 + particao] & 0x04) and "Sim" or "Não")
-            print("\tArmado modo stay:", (payload[22 + particao] & 0x02) and "Sim" or "Não")
-            print("\tArmado:", (payload[22 + particao] & 0x01) and "Sim" or "Não")
-        print("Zonas abertas:", self.bits_para_numeros(payload[39:47]))
-        print("Zonas em alarme:", self.bits_para_numeros(payload[47:55]))
+            print("Partición %02d:" % partición)
+            print("\tStay:", (payload[22 + partición] & 0x40) and "Sí" or "No")
+            print("\tDelay de saída:", (payload[22 + partición] & 0x20) and "Sí" or "No")
+            print("\tListo para armar:", (payload[22 + partición] & 0x10) and "Sí" or "No")
+            print("\tAlarma ocurrida:", (payload[22 + partición] & 0x08) and "Sí" or "No")
+            print("\tEn alarma:", (payload[22 + partición] & 0x04) and "Sí" or "No")
+            print("\tArmado modo stay:", (payload[22 + partición] & 0x02) and "Sí" or "No")
+            print("\tArmado:", (payload[22 + partición] & 0x01) and "Sí" or "No")
+        print("Zonas abiertas:", self.bits_para_numeros(payload[39:47]))
+        print("Zonas en alarma:", self.bits_para_numeros(payload[47:55]))
         # print("Zonas ativas:", self.bits_para_numeros(payload[55:63], inverso=True))
-        print("Zonas em bypass:", self.bits_para_numeros(payload[55:63]))
-        print("Sirenes ligadas:", self.bits_para_numeros(payload[63:65]))
+        print("Zonas en bypass:", self.bits_para_numeros(payload[55:63]))
+        print("Sirenas encendidas:", self.bits_para_numeros(payload[63:65]))
 
         # TODO interpretar mais campos
         print("*******************************************")

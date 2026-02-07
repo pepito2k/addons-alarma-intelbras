@@ -1,6 +1,6 @@
-"""Gerenciador de conexões com centrais AMT.
+"""Gerenciador de conexiones com centrais AMT.
 
-Mantém o registro de todas as conexões ativas e permite
+Mantém o registro de todas las conexiones ativas e permite
 enviar comandos para centrais específicas ou todas ao mesmo tempo.
 """
 
@@ -16,16 +16,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AMTConnection:
-    """Representa uma conexão com uma central AMT.
+    """Representa una conexión com uma central AMT.
     
     Attributes:
-        id: Identificador único da conexão (IP:porta).
-        address: Tupla (host, port) do endereço remoto.
+        id: Identificador único da conexión (IP:porta).
+        address: Tupla (host, port) do dirección remoto.
         reader: StreamReader asyncio para leitura.
         writer: StreamWriter asyncio para escrita.
-        connected_at: Timestamp da conexão.
-        pending_response: Future aguardando resposta.
-        metadata: Dados adicionais da conexão.
+        connected_at: Timestamp da conexión.
+        pending_response: Future esperando respuesta.
+        metadata: Datos adicionais da conexión.
     """
     
     id: str
@@ -38,21 +38,21 @@ class AMTConnection:
 
     @property
     def host(self) -> str:
-        """Endereço IP da central."""
+        """Dirección IP da central."""
         return self.address[0]
 
     @property
     def port(self) -> int:
-        """Porta da conexão."""
+        """Porta da conexión."""
         return self.address[1]
 
     @property
     def is_connected(self) -> bool:
-        """Verifica se a conexão está ativa."""
+        """Verifica si a conexión está ativa."""
         return not self.writer.is_closing()
 
     async def close(self) -> None:
-        """Fecha a conexão."""
+        """Fecha a conexión."""
         if not self.writer.is_closing():
             self.writer.close()
             try:
@@ -65,19 +65,19 @@ class AMTConnection:
 
 
 class ConnectionManager:
-    """Gerencia múltiplas conexões de centrais AMT.
+    """Gerencia múltiplas conexiones de centrais AMT.
     
-    Permite registrar, buscar e remover conexões, além de
+    Permite registrar, buscar e remover conexiones, y además de
     manter estatísticas de uso.
     
     Example:
         ```python
         manager = ConnectionManager()
         
-        # Adicionar conexão
+        # Adicionar conexión
         manager.add(connection)
         
-        # Buscar conexão
+        # Buscar conexión
         conn = manager.get("192.168.1.100:12345")
         
         # Listar todas
@@ -87,60 +87,60 @@ class ConnectionManager:
     """
 
     def __init__(self) -> None:
-        """Inicializa o gerenciador de conexões."""
+        """Inicializa el gerenciador de conexiones."""
         self._connections: dict[str, AMTConnection] = {}
         self._lock = asyncio.Lock()
 
     @property
     def count(self) -> int:
-        """Número de conexões ativas."""
+        """Número de conexiones ativas."""
         return len(self._connections)
 
     def add(self, connection: AMTConnection) -> None:
-        """Adiciona uma nova conexão.
+        """Adiciona uma nova conexión.
         
         Args:
-            connection: Conexão a ser adicionada.
+            connection: Conexión a ser adicionada.
         """
         self._connections[connection.id] = connection
-        logger.debug(f"Conexão adicionada: {connection.id}")
+        logger.debug(f"Conexión adicionada: {connection.id}")
 
     def remove(self, connection_id: str) -> AMTConnection | None:
-        """Remove uma conexão pelo ID.
+        """Remove uma conexión pelo ID.
         
         Args:
-            connection_id: ID da conexão a remover.
+            connection_id: ID da conexión a remover.
             
         Returns:
-            Conexão removida ou None se não existir.
+            Conexión removida ou None se no existir.
         """
         connection = self._connections.pop(connection_id, None)
         if connection:
-            logger.debug(f"Conexão removida: {connection_id}")
+            logger.debug(f"Conexión removida: {connection_id}")
         return connection
 
     def get(self, connection_id: str) -> AMTConnection | None:
-        """Busca uma conexão pelo ID.
+        """Busca uma conexión pelo ID.
         
         Args:
-            connection_id: ID da conexão.
+            connection_id: ID da conexión.
             
         Returns:
-            Conexão ou None se não existir.
+            Conexión ou None se no existir.
         """
         return self._connections.get(connection_id)
 
     def get_by_host(self, host: str) -> AMTConnection | None:
-        """Busca uma conexão pelo endereço IP.
+        """Busca uma conexión pelo dirección IP.
         
-        Útil quando você sabe o IP da central mas não a porta.
-        Retorna a primeira conexão encontrada para o host.
+        Útil quando você sabe o IP da central mas no a porta.
+        Devuelve a primeira conexión encontrada para o host.
         
         Args:
-            host: Endereço IP da central.
+            host: Dirección IP da central.
             
         Returns:
-            Conexão ou None se não existir.
+            Conexión ou None se no existir.
         """
         for connection in self._connections.values():
             if connection.host == host:
@@ -148,7 +148,7 @@ class ConnectionManager:
         return None
 
     def all(self) -> dict[str, AMTConnection]:
-        """Retorna todas as conexões.
+        """Devuelve todas las conexiones.
         
         Returns:
             Dicionário {id: connection}.
@@ -156,7 +156,7 @@ class ConnectionManager:
         return self._connections.copy()
 
     def list_hosts(self) -> list[str]:
-        """Lista os endereços IP de todas as conexões.
+        """Lista los direccións IP de todas las conexiones.
         
         Returns:
             Lista de IPs conectados.
@@ -164,10 +164,10 @@ class ConnectionManager:
         return [conn.host for conn in self._connections.values()]
 
     def has_connection(self, connection_id: str) -> bool:
-        """Verifica se uma conexão existe.
+        """Verifica si uma conexión existe.
         
         Args:
-            connection_id: ID da conexão.
+            connection_id: ID da conexión.
             
         Returns:
             True se existir.
@@ -175,35 +175,35 @@ class ConnectionManager:
         return connection_id in self._connections
 
     def has_host(self, host: str) -> bool:
-        """Verifica se há conexão com um host específico.
+        """Verifica si hay conexión com um host específico.
         
         Args:
-            host: Endereço IP.
+            host: Dirección IP.
             
         Returns:
-            True se existir conexão.
+            True se existir conexión.
         """
         return any(conn.host == host for conn in self._connections.values())
 
     async def close_all(self) -> None:
-        """Fecha todas as conexões."""
+        """Fecha todas las conexiones."""
         async with self._lock:
             for connection in list(self._connections.values()):
                 try:
                     await connection.close()
                 except Exception as e:
-                    logger.error(f"Erro ao fechar conexão {connection.id}: {e}")
+                    logger.error(f"Erro ao fechar conexión {connection.id}: {e}")
             self._connections.clear()
-        logger.info("Todas as conexões fechadas")
+        logger.info("Todas as conexiones fechadas")
 
     async def close_connection(self, connection_id: str) -> bool:
-        """Fecha uma conexão específica.
+        """Fecha uma conexión específica.
         
         Args:
-            connection_id: ID da conexão.
+            connection_id: ID da conexión.
             
         Returns:
-            True se a conexão foi fechada.
+            True se a conexión fue fechada.
         """
         connection = self.get(connection_id)
         if not connection:
@@ -214,11 +214,11 @@ class ConnectionManager:
             self.remove(connection_id)
             return True
         except Exception as e:
-            logger.error(f"Erro ao fechar conexão {connection_id}: {e}")
+            logger.error(f"Erro ao fechar conexión {connection_id}: {e}")
             return False
 
     def get_stats(self) -> dict[str, Any]:
-        """Retorna estatísticas do gerenciador.
+        """Devuelve estatísticas do gerenciador.
         
         Returns:
             Dicionário com estatísticas.
@@ -239,15 +239,15 @@ class ConnectionManager:
         }
 
     def __len__(self) -> int:
-        """Retorna o número de conexões."""
+        """Devuelve o número de conexiones."""
         return self.count
 
     def __contains__(self, connection_id: str) -> bool:
-        """Verifica se uma conexão existe."""
+        """Verifica si uma conexión existe."""
         return self.has_connection(connection_id)
 
     def __iter__(self):
-        """Itera sobre as conexões."""
+        """Itera sobre as conexiones."""
         return iter(self._connections.values())
 
     def __repr__(self) -> str:

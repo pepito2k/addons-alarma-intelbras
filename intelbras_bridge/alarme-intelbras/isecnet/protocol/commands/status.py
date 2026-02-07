@@ -3,17 +3,17 @@
 - Comando 0x5A: Status parcial (43 bytes)
 - Comando 0x5B: Status completo (54 bytes)
 
-Estrutura dos comandos:
+Estructura dos comandos:
     - Código: 0x5A ou 0x5B
-    - Conteúdo: Nenhum (comando simples)
+    - Contenido: Nenhum (comando simples)
 
 Exemplos da documentação:
     Status parcial (0x5A):
-        Requisição: 08 E9 21 31 32 33 34 5A 21 40
+        Solicitud: 08 E9 21 31 32 33 34 5A 21 40
         Resposta: 2C E9 <43 bytes de status> XX (checksum)
     
     Status completo (0x5B):
-        Requisição: 08 E9 21 31 32 33 34 5B 21 41
+        Solicitud: 08 E9 21 31 32 33 34 5B 21 41
         Resposta: 37 E9 <54 bytes de status> XX (checksum)
 """
 
@@ -26,27 +26,27 @@ from .base import Command
 
 
 class PartialStatusRequestCommand(Command):
-    """Comando para solicitar status parcial da central (43 bytes).
+    """Comando para solicitar estado parcial da central (43 bytes).
     
-    Este comando não tem conteúdo, apenas solicita o status parcial.
-    A resposta deve ser parseada com PartialCentralStatus.parse().
+    Este comando no tem contenido, apenas solicita o estado parcial.
+    A respuesta deve ser analizada com PartialCentralStatus.parse().
     """
 
     def __init__(self, password: str) -> None:
-        """Inicializa o comando de solicitação de status parcial.
+        """Inicializa el comando de solicitação de estado parcial.
         
         Args:
-            password: Senha do usuário (4-6 dígitos).
+            password: Contraseña do usuario (4-6 dígitos).
         """
         super().__init__(password)
 
     @property
     def code(self) -> int:
-        """Código do comando de status parcial (0x5A)."""
+        """Código do comando de estado parcial (0x5A)."""
         return CommandCode.STATUS_REQUEST_PARTIAL
 
     def build_content(self) -> bytes:
-        """Comando não tem conteúdo."""
+        """Comando no tem contenido."""
         return bytes()
 
     def __repr__(self) -> str:
@@ -56,15 +56,15 @@ class PartialStatusRequestCommand(Command):
 class StatusRequestCommand(Command):
     """Comando para solicitar status completo da central.
     
-    Este comando não tem conteúdo, apenas solicita o status.
-    A resposta deve ser parseada com CentralStatus.parse().
+    Este comando no tem contenido, apenas solicita o status.
+    A respuesta deve ser analizada com CentralStatus.parse().
     """
 
     def __init__(self, password: str) -> None:
-        """Inicializa o comando de solicitação de status.
+        """Inicializa el comando de solicitação de status.
         
         Args:
-            password: Senha do usuário (4-6 dígitos).
+            password: Contraseña do usuario (4-6 dígitos).
         """
         super().__init__(password)
 
@@ -74,7 +74,7 @@ class StatusRequestCommand(Command):
         return CommandCode.STATUS_REQUEST
 
     def build_content(self) -> bytes:
-        """Comando não tem conteúdo."""
+        """Comando no tem contenido."""
         return bytes()
 
     def __repr__(self) -> str:
@@ -98,10 +98,10 @@ class ZoneStatus:
     """Zonas com tamper (1-8)."""
     
     short_circuit_zones: set[int] = field(default_factory=set)
-    """Zonas em curto-circuito (1-8)."""
+    """Zonas em cortocircuito (1-8)."""
     
     low_battery_zones: set[int] = field(default_factory=set)
-    """Zonas com bateria baixa em sensor sem fio (17-64)."""
+    """Zonas com bateria baixa em sensor sem cable (17-64)."""
 
     @staticmethod
     def _parse_bitmask(data: bytes, start_zone: int = 1) -> set[int]:
@@ -125,26 +125,26 @@ class ZoneStatus:
 
 @dataclass
 class PartitionStatus:
-    """Status das partições."""
+    """Status das particiones."""
     
     partitions_enabled: bool = False
-    """Se a central está configurada com partições."""
+    """Si a central está configurada com particiones."""
     
     partition_a_armed: bool = False
-    """Partição A está armada."""
+    """Partición A está armada."""
     
     partition_b_armed: bool = False
-    """Partição B está armada."""
+    """Partición B está armada."""
     
     partition_c_armed: bool = False
-    """Partição C está armada."""
+    """Partición C está armada."""
     
     partition_d_armed: bool = False
-    """Partição D está armada."""
+    """Partición D está armada."""
     
     @property
     def any_armed(self) -> bool:
-        """Verifica se alguma partição está armada."""
+        """Verifica si alguna partición está armada."""
         return any([
             self.partition_a_armed,
             self.partition_b_armed,
@@ -154,7 +154,7 @@ class PartitionStatus:
     
     @property
     def all_armed(self) -> bool:
-        """Verifica se todas as partições estão armadas."""
+        """Verifica si todas las particiones estão armadas."""
         return all([
             self.partition_a_armed,
             self.partition_b_armed,
@@ -165,17 +165,17 @@ class PartitionStatus:
 
 @dataclass
 class PGMStatus:
-    """Status das saídas PGM (1-19)."""
+    """Status das salidas PGM (1-19)."""
     
     pgm_states: dict[int, bool] = field(default_factory=dict)
-    """Estado de cada PGM (True = ligada, False = desligada)."""
+    """Estado de cada PGM (True = encendida, False = apagada)."""
     
     def is_on(self, pgm_number: int) -> bool:
-        """Verifica se uma PGM está ligada."""
+        """Verifica si uma PGM está encendida."""
         return self.pgm_states.get(pgm_number, False)
     
     def get_active_pgms(self) -> list[int]:
-        """Retorna lista de PGMs ligadas."""
+        """Devuelve lista de PGMs encendidas."""
         return [num for num, state in self.pgm_states.items() if state]
 
 
@@ -185,7 +185,7 @@ class SystemProblems:
     
     # Energia
     ac_failure: bool = False
-    """Falta de rede elétrica."""
+    """Falta de red eléctrica."""
     
     low_battery: bool = False
     """Bateria baixa."""
@@ -194,10 +194,10 @@ class SystemProblems:
     """Bateria ausente ou invertida."""
     
     battery_short: bool = False
-    """Bateria em curto-circuito."""
+    """Bateria em cortocircuito."""
     
     aux_overload: bool = False
-    """Sobrecarga na saída auxiliar."""
+    """Sobrecarga na salida auxiliar."""
     
     # Teclados
     keyboard_problems: list[int] = field(default_factory=list)
@@ -219,20 +219,20 @@ class SystemProblems:
     
     # Sirene
     siren_wire_cut: bool = False
-    """Corte do fio da sirene."""
+    """Corte do cable da sirene."""
     
     siren_short: bool = False
-    """Curto-circuito no fio da sirene."""
+    """Curto-circuito no cable da sirene."""
     
     phone_line_cut: bool = False
     """Corte de linha telefônica."""
     
     event_comm_failure: bool = False
-    """Falha ao comunicar evento."""
+    """Fallo ao comunicar evento."""
     
     @property
     def has_problems(self) -> bool:
-        """Verifica se há algum problema."""
+        """Verifica si hay algum problema."""
         return any([
             self.ac_failure,
             self.low_battery,
@@ -253,9 +253,9 @@ class SystemProblems:
 
 @dataclass
 class CentralStatus:
-    """Status completo da central de alarme.
+    """Status completo da central de alarma.
     
-    Parseado a partir da resposta de 54 bytes do comando 0x5B.
+    Parseado a partir da respuesta de 54 bytes do comando 0x5B.
     """
     
     # Informações gerais
@@ -273,7 +273,7 @@ class CentralStatus:
     """Alguma zona está disparada."""
     
     siren_on: bool = False
-    """Sirene está ligada."""
+    """Sirene está encendida."""
     
     has_problem: bool = False
     """Há problema na central."""
@@ -287,7 +287,7 @@ class CentralStatus:
     """Status das zonas."""
     
     partitions: PartitionStatus = field(default_factory=PartitionStatus)
-    """Status das partições."""
+    """Status das particiones."""
     
     pgm: PGMStatus = field(default_factory=PGMStatus)
     """Status das PGMs."""
@@ -295,25 +295,25 @@ class CentralStatus:
     problems: SystemProblems = field(default_factory=SystemProblems)
     """Problemas do sistema."""
     
-    # Dados brutos
+    # Datos brutos
     raw_data: bytes = field(default_factory=bytes)
-    """54 bytes brutos da resposta."""
+    """54 bytes brutos da respuesta."""
 
     @classmethod
     def parse(cls, data: bytes | bytearray) -> Self:
-        """Parseia os 54 bytes de status da central.
+        """Parseia los 54 bytes de status da central.
         
         Args:
-            data: 54 bytes de status recebidos.
+            data: 54 bytes de status recibidos.
             
         Returns:
-            Instância de CentralStatus com todos os campos parseados.
+            Instancia de CentralStatus com todos los campos analizados.
             
         Raises:
-            ValueError: Se os dados não tiverem 54 bytes.
+            ValueError: Si llos datos no tienen 54 bytes.
         """
         if len(data) != 54:
-            raise ValueError(f"Status deve ter 54 bytes, recebido {len(data)}")
+            raise ValueError(f"Status debe tener 54 bytes, recibido {len(data)}")
         
         status = cls(raw_data=bytes(data))
         
@@ -335,14 +335,14 @@ class CentralStatus:
         low_nibble = data[25] & 0x0F
         status.firmware_version = f"{high_nibble}.{low_nibble}"
         
-        # === Partição habilitada (Status27, byte 26) ===
+        # === Partición habilitada (Status27, byte 26) ===
         status.partitions.partitions_enabled = data[26] == 0x01
         
-        # === Partições A e B (Status28, byte 27) ===
+        # === Particiones A e B (Status28, byte 27) ===
         status.partitions.partition_a_armed = bool(data[27] & 0x01)
         status.partitions.partition_b_armed = bool(data[27] & 0x02)
         
-        # === Partições C e D (Status29, byte 28) ===
+        # === Particiones C e D (Status29, byte 28) ===
         status.partitions.partition_c_armed = bool(data[28] & 0x01)
         status.partitions.partition_d_armed = bool(data[28] & 0x02)
         
@@ -354,7 +354,7 @@ class CentralStatus:
         status.has_problem = bool(func_byte & 0x11)
         
         # === Data/Hora (Status31-35, bytes 30-34) ===
-        # IMPORTANTE: A central AMT usa HEXADECIMAL PURO, não BCD!
+        # IMPORTANTE: A central AMT usa HEXADECIMAL PURO, no BCD!
         # Status31: Hora em HEX (0x12 = 18h decimal)
         # Status32: Minuto em HEX (0x3b = 59min decimal)
         # Status33: Dia em HEX (0x12 = 18 decimal)
@@ -422,7 +422,7 @@ class CentralStatus:
         status.pgm.pgm_states[2] = bool(data[45] & 0x20)  # Bit 5
         status.pgm.pgm_states[3] = bool(data[45] & 0x10)  # Bit 4
         
-        # === Bateria baixa sensores sem fio (Status47-52, bytes 46-51) ===
+        # === Bateria baixa sensores sem cable (Status47-52, bytes 46-51) ===
         # Zonas 17-64
         low_bat_data = data[46:52]
         for byte_idx, byte_val in enumerate(low_bat_data):
@@ -443,7 +443,7 @@ class CentralStatus:
 
     @classmethod
     def try_parse(cls, data: bytes | bytearray) -> Self | None:
-        """Tenta parsear os dados, retorna None se falhar."""
+        """Intenta analizar los datos, devuelve None se fallar."""
         try:
             return cls.parse(data)
         except (ValueError, IndexError):
@@ -461,9 +461,9 @@ class CentralStatus:
 
 @dataclass
 class PartialCentralStatus:
-    """Status parcial da central de alarme (43 bytes).
+    """Status parcial da central de alarma (43 bytes).
     
-    Parseado a partir da resposta de 43 bytes do comando 0x5A.
+    Parseado a partir da respuesta de 43 bytes do comando 0x5A.
     Similar ao CentralStatus, mas com menos campos.
     """
     
@@ -482,7 +482,7 @@ class PartialCentralStatus:
     """Alguma zona está disparada."""
     
     siren_on: bool = False
-    """Sirene está ligada."""
+    """Sirene está encendida."""
     
     has_problem: bool = False
     """Há problema na central."""
@@ -493,10 +493,10 @@ class PartialCentralStatus:
     
     # Sub-status
     zones: ZoneStatus = field(default_factory=ZoneStatus)
-    """Status das zonas (até 48 zonas para status parcial)."""
+    """Status das zonas (até 48 zonas para estado parcial)."""
     
     partitions: PartitionStatus = field(default_factory=PartitionStatus)
-    """Status das partições (apenas A e B no parcial)."""
+    """Status das particiones (apenas A e B no parcial)."""
     
     pgm: PGMStatus = field(default_factory=PGMStatus)
     """Status das PGMs (apenas 1 e 2 no parcial)."""
@@ -504,25 +504,25 @@ class PartialCentralStatus:
     problems: SystemProblems = field(default_factory=SystemProblems)
     """Problemas do sistema."""
     
-    # Dados brutos
+    # Datos brutos
     raw_data: bytes = field(default_factory=bytes)
-    """43 bytes brutos da resposta."""
+    """43 bytes brutos da respuesta."""
 
     @classmethod
     def parse(cls, data: bytes | bytearray) -> Self:
-        """Parseia os 43 bytes de status parcial da central.
+        """Parseia los 43 bytes de estado parcial da central.
         
         Args:
-            data: 43 bytes de status recebidos.
+            data: 43 bytes de status recibidos.
             
         Returns:
-            Instância de PartialCentralStatus com todos os campos parseados.
+            Instancia de PartialCentralStatus com todos los campos analizados.
             
         Raises:
-            ValueError: Se os dados não tiverem 43 bytes.
+            ValueError: Si llos datos no tienen 43 bytes.
         """
         if len(data) != 43:
-            raise ValueError(f"Status parcial deve ter 43 bytes, recebido {len(data)}")
+            raise ValueError(f"Status parcial debe tener 43 bytes, recibido {len(data)}")
         
         status = cls(raw_data=bytes(data))
         
@@ -546,13 +546,13 @@ class PartialCentralStatus:
         low_nibble = data[19] & 0x0F
         status.firmware_version = f"{high_nibble}.{low_nibble}"
         
-        # === Partição habilitada (Status21, byte 20) ===
+        # === Partición habilitada (Status21, byte 20) ===
         status.partitions.partitions_enabled = data[20] == 0x01
         
-        # === Partições A e B (Status22, byte 21) ===
+        # === Particiones A e B (Status22, byte 21) ===
         status.partitions.partition_a_armed = bool(data[21] & 0x01)
         status.partitions.partition_b_armed = bool(data[21] & 0x02)
-        # Status parcial não inclui partições C e D
+        # Status parcial no inclui particiones C e D
         
         # === Funcionamento (Status23, byte 22) ===
         func_byte = data[22]
@@ -562,7 +562,7 @@ class PartialCentralStatus:
         status.has_problem = bool(func_byte & 0x11)
         
         # === Data/Hora (Status24-28, bytes 23-27) ===
-        # IMPORTANTE: A central AMT usa HEXADECIMAL PURO, não BCD!
+        # IMPORTANTE: A central AMT usa HEXADECIMAL PURO, no BCD!
         # Status24: Hora em HEX (0x12 = 18h decimal)
         # Status25: Minuto em HEX (0x3b = 59min decimal)
         # Status26: Dia em HEX (0x12 = 18 decimal)
@@ -594,7 +594,7 @@ class PartialCentralStatus:
                 status.problems.receiver_problems.append(i + 1)
         
         # === Nível bateria (Status31, byte 30) ===
-        # Informações sobre nível da bateria (não parseamos em detalhes por enquanto)
+        # Informações sobre nível da bateria (no parseamos em detalhes por enquanto)
         
         # === Tamper teclados (Status32, byte 31) ===
         for i in range(4):
@@ -628,16 +628,16 @@ class PartialCentralStatus:
                         status.zones.short_circuit_zones.add(zone_num)
         
         # === Status sirene e PGMs 1-2 (Status38, byte 37) ===
-        # Status38 tem informação mais específica sobre sirene e PGMs
+        # Status38 tem informação más específica sobre sirene e PGMs
         # Bit 2: Status sirene (sobrescreve Status23 se disponível)
-        if data[37] & 0x04:  # Se bit 2 está setado, sirene está ligada
+        if data[37] & 0x04:  # Si bit 2 está setado, sirene está encendida
             status.siren_on = True
         # Caso contrário, mantém o valor do Status23
         
         status.pgm.pgm_states[1] = bool(data[37] & 0x40)  # Bit 6
         status.pgm.pgm_states[2] = bool(data[37] & 0x20)  # Bit 5
         
-        # === Bateria baixa sensores sem fio (Status39-43, bytes 38-42) ===
+        # === Bateria baixa sensores sem cable (Status39-43, bytes 38-42) ===
         # Zonas 1-40
         low_bat_data = data[38:43]
         for byte_idx, byte_val in enumerate(low_bat_data):
@@ -651,7 +651,7 @@ class PartialCentralStatus:
 
     @classmethod
     def try_parse(cls, data: bytes | bytearray) -> Self | None:
-        """Tenta parsear os dados, retorna None se falhar."""
+        """Intenta analizar los datos, devuelve None se fallar."""
         try:
             return cls.parse(data)
         except (ValueError, IndexError):

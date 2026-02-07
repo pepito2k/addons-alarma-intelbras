@@ -1,6 +1,6 @@
-"""Classe base para comandos ISECMobile.
+"""Clase base para comandos ISECMobile.
 
-Esta classe define a interface que todos os comandos devem implementar,
+Esta clase define a interface que todos los comandos devem implementar,
 permitindo uma arquitetura extensível para adicionar novos comandos.
 """
 
@@ -13,46 +13,46 @@ if TYPE_CHECKING:
 
 
 class Command(ABC):
-    """Classe base abstrata para comandos ISECMobile.
+    """Clase base abstrata para comandos ISECMobile.
     
-    Subclasses devem implementar:
+    Subclases devem implementar:
         - code: Código do comando
         - build_mobile_frame: Construir o frame ISECMobile
     """
 
     def __init__(self, password: str) -> None:
-        """Inicializa o comando com a senha do usuário.
+        """Inicializa el comando com a contraseña do usuario.
         
         Args:
-            password: Senha do usuário para autenticação (4-6 dígitos).
+            password: Contraseña do usuario para autenticação (4-6 dígitos).
         """
         self._password = password
 
     @property
     @abstractmethod
     def code(self) -> int:
-        """Código do comando (ex: 0x41 para ativação)."""
+        """Código do comando (ex: 0x41 para activación)."""
         ...
 
     @property
     def password(self) -> str:
-        """Senha do usuário."""
+        """Contraseña do usuario."""
         return self._password
 
     @abstractmethod
     def build_content(self) -> bytes:
-        """Constrói o conteúdo específico do comando.
+        """Construye o contenido específico do comando.
         
         Returns:
-            Bytes do conteúdo do comando (pode ser vazio).
+            Bytes do contenido do comando (pode ser vazio).
         """
         ...
 
     def build_mobile_frame(self) -> "ISECMobileFrame":
-        """Constrói o frame ISECMobile para este comando.
+        """Construye o frame ISECMobile para este comando.
         
         Returns:
-            Instância de ISECMobileFrame.
+            Instancia de ISECMobileFrame.
         """
         from ..isecmobile import ISECMobileFrame
         
@@ -63,10 +63,10 @@ class Command(ABC):
         )
 
     def build_net_frame(self) -> "ISECNetFrame":
-        """Constrói o frame ISECNet completo para este comando.
+        """Construye o frame ISECNet completo para este comando.
         
         Returns:
-            Instância de ISECNetFrame pronta para transmissão.
+            Instancia de ISECNetFrame pronta para transmisión.
         """
         from ..isecnet import ISECNetFrame
         
@@ -74,7 +74,7 @@ class Command(ABC):
         return ISECNetFrame.create_mobile_frame(mobile_frame.build())
 
     def build(self) -> bytes:
-        """Constrói os bytes finais prontos para envio via socket.
+        """Construye los bytes finais prontos para envio via socket.
         
         Returns:
             Bytes do pacote completo (ISECNet com ISECMobile encapsulado).

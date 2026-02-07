@@ -1,17 +1,17 @@
-"""Frame ISECNet - Camada de transporte do protocolo.
+"""Frame ISECNet - Capa de transporte do protocolo.
 
-O frame ISECNet encapsula os comandos ISECMobile para transmissão via TCP.
+O frame ISECNet encapsula los comandos ISECMobile para transmisión via TCP.
 
-Estrutura do frame:
-| Campo      | Bytes | Descrição                           |
+Estructura do frame:
+| Campo      | Bytes | Descripción                           |
 |------------|-------|-------------------------------------|
-| Nº Bytes   | 1     | Tamanho total do pacote             |
+| Nº Bytes   | 1     | Tamaño total do pacote             |
 | Comando    | 1     | 0xE9 para ISECMobile                |
-| Conteúdo   | N     | Frame ISECMobile                    |
+| Contenido   | N     | Frame ISECMobile                    |
 | Checksum   | 1     | XOR de todos bytes ^ 0xFF           |
 
-Exemplo da documentação:
-    Envio: 08 E9 21 31 32 33 34 41 21 5B
+Ejemplo de la documentación:
+    Envío: 08 E9 21 31 32 33 34 41 21 5B
     - 08: 8 bytes no pacote
     - E9: Comando ISECMobile
     - 21 31 32 33 34 41 21: Frame ISECMobile
@@ -26,17 +26,17 @@ from .checksum import Checksum
 
 
 class ISECNetError(Exception):
-    """Erro de parsing ou validação de frame ISECNet."""
+    """Error de análisis o validación de frame ISECNet."""
     pass
 
 
 @dataclass
 class ISECNetFrame:
-    """Representa um frame do protocolo ISECNet.
+    """Representa un frame do protocolo ISECNet.
     
     Attributes:
-        command: Código do comando (geralmente 0xE9 para ISECMobile).
-        content: Conteúdo/payload do frame (frame ISECMobile).
+        command: Código do comando (generalmente 0xE9 para ISECMobile).
+        content: Contenido/payload do frame (frame ISECMobile).
     """
     
     command: int
@@ -44,23 +44,23 @@ class ISECNetFrame:
 
     @classmethod
     def create_mobile_frame(cls, isecmobile_content: bytes) -> Self:
-        """Cria um frame ISECNet para encapsular conteúdo ISECMobile.
+        """Crea un frame ISECNet para encapsular contenido ISECMobile.
         
         Args:
             isecmobile_content: Bytes do frame ISECMobile.
             
         Returns:
-            Instância de ISECNetFrame configurada.
+            Instancia de ISECNetFrame configurada.
         """
         return cls(command=ISECNET_COMMAND_MOBILE, content=isecmobile_content)
 
     def build(self) -> bytes:
-        """Constrói o frame completo pronto para transmissão.
+        """Construye o frame completo pronto para transmisión.
         
-        O frame inclui: tamanho, comando, conteúdo e checksum.
+        El frame inclui: tamaño, comando, contenido e checksum.
         
-        O campo "Nº de Bytes" indica quantos bytes seguem após ele,
-        excluindo o checksum (ou seja: comando + conteúdo).
+        El campo "Nº de bytes" indica quantos bytes seguem após ele,
+        excluindo o checksum (ou seja: comando + contenido).
         
         Returns:
             Bytes do frame completo.
@@ -70,11 +70,11 @@ class ISECNetFrame:
             >>> frame.build().hex(' ')
             '08 e9 21 31 32 33 34 41 21 5b'
         """
-        # Nº de Bytes = comando (1) + conteúdo (N)
-        # Não inclui o próprio byte de tamanho nem o checksum
+        # Nº de bytes = comando (1) + contenido (N)
+        # No incluye o próprio byte de tamaño nem o checksum
         size = 1 + len(self.content)  # command + content
         
-        # Monta o frame sem checksum
+        # Monta o frame sin checksum
         frame_without_checksum = bytes([size, self.command]) + self.content
         
         # Adiciona checksum
@@ -82,30 +82,30 @@ class ISECNetFrame:
 
     @classmethod
     def parse(cls, data: bytes | bytearray) -> Self:
-        """Faz o parsing de bytes recebidos em um frame ISECNet.
+        """Realiza el análisis de bytes recibidos em um frame ISECNet.
         
-        O campo "Nº de Bytes" indica quantos bytes seguem após ele,
-        excluindo o checksum. Tamanho total = 1 (size) + size + 1 (checksum).
+        El campo "Nº de bytes" indica quantos bytes seguem após ele,
+        excluindo o checksum. Tamaño total = 1 (size) + size + 1 (checksum).
         
         Args:
             data: Bytes do frame completo (incluindo checksum).
             
         Returns:
-            Instância de ISECNetFrame parseada.
+            Instancia de ISECNetFrame analizada.
             
         Raises:
-            ISECNetError: Se o frame for inválido.
+            ISECNetError: Si o frame for inválido.
         """
         if len(data) < 3:
-            raise ISECNetError(f"Frame muito curto: {len(data)} bytes (mínimo 3)")
+            raise ISECNetError(f"Frame demasiado corto: {len(data)} bytes (mínimo 3)")
         
         size = data[0]
         expected_total = size + 2  # size byte + content indicated by size + checksum
         
         if len(data) != expected_total:
             raise ISECNetError(
-                f"Tamanho inconsistente: header indica {size} bytes de conteúdo "
-                f"(total esperado {expected_total}), recebido {len(data)} bytes"
+                f"Tamaño inconsistente: header indica {size} bytes de contenido "
+                f"(total esperado {expected_total}), recibido {len(data)} bytes"
             )
         
         # Valida checksum
@@ -113,19 +113,19 @@ class ISECNetFrame:
             raise ISECNetError("Checksum inválido")
         
         command = data[1]
-        content = bytes(data[2:-1])  # Exclui size, command e checksum
+        content = bytes(data[2:-1])  # Excluye size, command e checksum
         
         return cls(command=command, content=content)
 
     @classmethod
     def try_parse(cls, data: bytes | bytearray) -> Self | None:
-        """Tenta fazer o parsing de bytes, retornando None em caso de erro.
+        """Intenta fazer o análisis de bytes, devolviendo None en caso de error.
         
         Args:
             data: Bytes do frame completo.
             
         Returns:
-            Instância de ISECNetFrame ou None se inválido.
+            Instancia de ISECNetFrame ou None se inválido.
         """
         try:
             return cls.parse(data)
@@ -134,17 +134,17 @@ class ISECNetFrame:
 
     @property
     def is_mobile_command(self) -> bool:
-        """Verifica se é um comando ISECMobile (0xE9)."""
+        """Verifica si é um comando ISECMobile (0xE9)."""
         return self.command == ISECNET_COMMAND_MOBILE
 
     @property
     def is_heartbeat(self) -> bool:
-        """Verifica se é um comando de heartbeat (0xF7)."""
+        """Verifica si é um comando de heartbeat (0xF7)."""
         return self.command == ISECNET_COMMAND_HEARTBEAT
 
     @classmethod
     def create_heartbeat(cls) -> "ISECNetFrame":
-        """Cria um frame de heartbeat (0xF7).
+        """Crea un frame de heartbeat (0xF7).
         
         Returns:
             Frame de heartbeat pronto para envio.
@@ -153,20 +153,20 @@ class ISECNetFrame:
 
     @classmethod
     def create_ack_response(cls) -> "ISECNetFrame":
-        """Cria uma resposta ACK (0xFE) encapsulada em 0xE9.
+        """Crea una respuesta ACK (0xFE) encapsulada em 0xE9.
         
         Usado para responder a comandos ISECMobile.
         
         Returns:
-            Frame de resposta ACK encapsulado.
+            Frame de respuesta ACK encapsulado.
         """
         return cls(command=ISECNET_COMMAND_MOBILE, content=bytes([ResponseCode.ACK]))
 
     @classmethod
     def create_simple_ack(cls) -> "ISECNetFrame":
-        """Cria uma resposta ACK simples (frame curto).
+        """Crea una respuesta ACK simples (frame curto).
         
-        O ACK (0xFE) é enviado diretamente como comando, sem encapsulamento.
+        El ACK (0xFE) é enviado diretamente como comando, sem encapsulamento.
         Usado para responder a comandos como 0x94 e 0xF7.
         
         Returns:
@@ -182,24 +182,24 @@ class ISECNetFrame:
 
 
 class ISECNetFrameReader:
-    """Leitor de frames ISECNet de um stream de bytes.
+    """Lector de frames ISECNet de um stream de bytes.
     
-    Útil para processar dados recebidos via socket, onde múltiplos
-    frames podem chegar ou frames podem chegar parcialmente.
+    Útil para processar datos recibidos via socket, donde múltiplos
+    frames pueden llegar ou frames pueden llegar parcialmente.
     """
 
     def __init__(self) -> None:
-        """Inicializa o leitor."""
+        """Inicializa el lector."""
         self._buffer = bytearray()
 
     def feed(self, data: bytes | bytearray) -> list[ISECNetFrame]:
-        """Alimenta dados ao buffer e retorna frames completos.
+        """Alimenta datos al buffer e devuelve frames completos.
         
         Args:
-            data: Bytes recebidos.
+            data: Bytes recibidos.
             
         Returns:
-            Lista de frames completos parseados.
+            Lista de frames completos analizados.
         """
         self._buffer.extend(data)
         frames: list[ISECNetFrame] = []
@@ -210,25 +210,25 @@ class ISECNetFrameReader:
         return frames
 
     def _try_extract_frame(self, frames: list[ISECNetFrame]) -> bool:
-        """Tenta extrair um frame do buffer.
+        """Intenta extrair um frame do buffer.
         
         Args:
-            frames: Lista onde adicionar frames encontrados.
+            frames: Lista donde adicionar frames encontrados.
             
         Returns:
-            True se um frame foi extraído, False caso contrário.
+            True si se extrajo un frame, False de lo contrario.
         """
         if len(self._buffer) < 1:
             return False
         
-        # Verifica se é um heartbeat de 1 byte (0xF7)
-        # A central envia apenas o byte F7, sem tamanho nem checksum
+        # Verifica si é um heartbeat de 1 byte (0xF7)
+        # A central envía apenas o byte F7, sem tamaño nem checksum
         if self._buffer[0] == ISECNET_COMMAND_HEARTBEAT:
             frames.append(ISECNetFrame(command=ISECNET_COMMAND_HEARTBEAT, content=bytes()))
             self._buffer.pop(0)
             return True
         
-        # Frame normal precisa de pelo menos 3 bytes
+        # Frame normal precisa de al menos 3 bytes
         if len(self._buffer) < 3:
             return False
         
@@ -236,12 +236,12 @@ class ISECNetFrameReader:
         total_size = size + 2  # size byte + content + checksum
         
         if size < 1:
-            # Tamanho inválido (deve ter pelo menos o comando), descarta byte
+            # Tamaño inválido (debe tener al menos o comando), descarte byte
             self._buffer.pop(0)
             return True
         
         if len(self._buffer) < total_size:
-            # Aguarda mais dados
+            # Espera más datos
             return False
         
         frame_data = bytes(self._buffer[:total_size])
@@ -251,17 +251,17 @@ class ISECNetFrameReader:
             frames.append(frame)
             del self._buffer[:total_size]
         else:
-            # Frame inválido, descarta primeiro byte e tenta novamente
+            # Frame inválido, descarte primer byte e intenta nuevamente
             self._buffer.pop(0)
         
         return True
 
     def clear(self) -> None:
-        """Limpa o buffer interno."""
+        """Limpia el buffer interno."""
         self._buffer.clear()
 
     @property
     def pending_bytes(self) -> int:
-        """Retorna o número de bytes pendentes no buffer."""
+        """Devuelve o número de bytes pendentes no buffer."""
         return len(self._buffer)
 

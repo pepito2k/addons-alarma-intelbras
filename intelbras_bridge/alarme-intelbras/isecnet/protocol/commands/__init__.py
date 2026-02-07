@@ -1,6 +1,6 @@
 """Comandos ISECMobile.
 
-Módulo com definições e classes para cada comando suportado
+Módulo com definições e clases para cada comando suportado
 pelo protocolo ISECMobile.
 """
 

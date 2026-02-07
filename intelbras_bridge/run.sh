@@ -90,7 +90,7 @@ publish_partition_switch_discovery() {
     local uid="${DEVICE_ID}_partition_${partition_letter}_switch"
     local state_topic="intelbras/alarm/partition_${partition_letter}_state"
     local command_topic="intelbras/alarm/command"
-    local payload='{'; payload+="\"name\":\"Partição ${partition_name}\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\",\"command_topic\":\"${command_topic}\","; payload+="\"value_template\":\"{% if value == 'Armada' or value == 'Disparada' %}ON{% else %}OFF{% endif %}\","; payload+="\"payload_on\":\"ARM_PART_${partition_name}\",\"payload_off\":\"DISARM_PART_${partition_name}\","; payload+="\"state_on\":\"ON\",\"state_off\":\"OFF\",\"icon\":\"mdi:shield-lock\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="$(publish_device_info)"; payload+='}';
+    local payload='{'; payload+="\"name\":\"Partición ${partition_name}\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\",\"command_topic\":\"${command_topic}\","; payload+="\"value_template\":\"{% if value == 'Armada' or value == 'Disparada' %}ON{% else %}OFF{% endif %}\","; payload+="\"payload_on\":\"ARM_PART_${partition_name}\",\"payload_off\":\"DISARM_PART_${partition_name}\","; payload+="\"state_on\":\"ON\",\"state_off\":\"OFF\",\"icon\":\"mdi:shield-lock\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="$(publish_device_info)"; payload+='}';
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/switch/${DEVICE_ID}/${uid}/config" -m "${payload}"
 }
 

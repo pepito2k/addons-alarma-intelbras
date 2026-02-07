@@ -1,7 +1,7 @@
-"""Servidor TCP para comunicação com central AMT.
+"""Servidor TCP para comunicación com central AMT.
 
-Implementa o servidor asyncio que recebe conexões da central
-e gerencia a comunicação bidirecional.
+Implementa o servidor asyncio que recebe conexiones da central
+e gerencia a comunicación bidirecional.
 """
 
 from .tcp_server import AMTServer, AMTServerConfig

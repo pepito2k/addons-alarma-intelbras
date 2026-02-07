@@ -1,13 +1,13 @@
 #!/bin/sh
 
-# Gancho para mensagens urgentes (de disparo)
+# Gancho para mensajes urgentes (de disparo)
 #
-# O conteúdo da mensagem é passado como um parâmetro de
+# O contenido da mensaje é passado como um parámetro de
 # linha de comando ($1).
 #
-# Modifique este script para que a mensagem seja repassada
+# Modifique este script para que a mensaje seja repassada
 # via e-mail, SMS, Telegram, PushOver, etc. Ou remova seu
-# conteúdo para que ele não faça nada (o script precisa
-# existir e ser executável, mesmo que não faça nada.)
+# contenido para que ele no faça nada (o script precisa
+# existir e ser executável, mesmo que no faça nada.)
 
 echo "$1" >> gancho_msg.txt

@@ -1,10 +1,10 @@
 """Comando 0x94 - Identificação da Central ao Conectar.
 
-A central envia este comando logo após estabelecer a conexão TCP
-para informar seu número de conta (Contact-ID) e endereço MAC parcial.
+A central envía este comando logo após estabelecer a conexión TCP
+para informar seu número de conta (Contact-ID) e dirección MAC parcial.
 
-Estrutura do conteúdo (6 bytes):
-| Byte | Campo   | Descrição                                    |
+Estructura do contenido (6 bytes):
+| Byte | Campo   | Descripción                                    |
 |------|---------|----------------------------------------------|
 | 1    | Canal   | 0x45='E' (Ethernet), 0x47='G', 0x48='H' GPRS |
 | 2    | ID1     | Primeiro byte da conta (2 nibbles)           |
@@ -25,7 +25,7 @@ from enum import Enum
 
 
 class ConnectionChannel(Enum):
-    """Canal de conexão da central."""
+    """Canal de conexión da central."""
     
     ETHERNET = 0x45  # 'E'
     GPRS_SIM1 = 0x47  # 'G'
@@ -37,7 +37,7 @@ class ConnectionChannel(Enum):
         for channel in cls:
             if channel.value == value:
                 return channel
-        raise ValueError(f"Canal desconhecido: 0x{value:02X}")
+        raise ValueError(f"Canal desconocido: 0x{value:02X}")
     
     @property
     def name_pt(self) -> str:
@@ -64,25 +64,25 @@ class ConnectionInfo:
     
     @classmethod
     def parse(cls, data: bytes) -> "ConnectionInfo":
-        """Faz o parsing do conteúdo do comando 0x94.
+        """Realiza el análisis do contenido do comando 0x94.
         
         Args:
-            data: 6 bytes do conteúdo do comando.
+            data: 6 bytes do contenido do comando.
             
         Returns:
-            ConnectionInfo parseado.
+            ConnectionInfo analizado.
             
         Raises:
-            ValueError: Se os dados forem inválidos.
+            ValueError: Si llos datos forem inválidos.
         """
         if len(data) != 6:
-            raise ValueError(f"Comando 0x94 deve ter 6 bytes, recebido {len(data)}")
+            raise ValueError(f"Comando 0x94 debe tener 6 bytes, recibido {len(data)}")
         
         # Byte 0: Canal
         try:
             channel = ConnectionChannel.from_byte(data[0])
         except ValueError:
-            # Canal desconhecido, assume Ethernet
+            # Canal desconocido, assume Ethernet
             channel = ConnectionChannel.ETHERNET
         
         # Bytes 1-2: Conta (cada nibble é um dígito)
@@ -91,7 +91,7 @@ class ConnectionInfo:
         id1 = data[1]
         id2 = data[2]
         
-        # Extrai os 4 dígitos da conta
+        # Extrai los 4 dígitos da conta
         digit1 = (id1 >> 4) & 0x0F
         digit2 = id1 & 0x0F
         digit3 = (id2 >> 4) & 0x0F
@@ -111,7 +111,7 @@ class ConnectionInfo:
     
     @classmethod
     def try_parse(cls, data: bytes) -> "ConnectionInfo | None":
-        """Tenta fazer o parsing, retorna None se falhar."""
+        """Intenta fazer o análisis, devuelve None se fallar."""
         try:
             return cls.parse(data)
         except (ValueError, IndexError):

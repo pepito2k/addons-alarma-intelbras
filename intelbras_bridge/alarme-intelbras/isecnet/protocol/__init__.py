@@ -1,7 +1,7 @@
 """Módulo de protocolo ISECNet/ISECMobile.
 
-Contém os builders e parsers para frames ISECNet e ISECMobile,
-além do cálculo de checksum e definições de comandos/respostas.
+Contém los builders e parsers para frames ISECNet e ISECMobile,
+além do cálculo de checksum e definições de comandos/respuestas.
 """
 
 from .checksum import Checksum, CRC16

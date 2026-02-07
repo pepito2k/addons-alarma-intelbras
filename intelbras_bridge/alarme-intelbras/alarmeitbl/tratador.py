@@ -11,13 +11,13 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
 
     eventos_contact_id = {
         100: {'*': "Emergencia medica"},
-        110: {'*': "Alarme de incendio"},
-        120: {'*': "Panico"},
-        121: {'*': "Ativacao/desativacao sob coacao"},
-        122: {'*': "Panico silencioso"},
+        110: {'*': "Alarma de incendio"},
+        120: {'*': "ánico"},
+        121: {'*': "Activación/desactivación bajo coacción"},
+        122: {'*': "Pánico silencioso"},
         130: {
             'aber': "Disparo de zona {zona}",
-            'rest': "Restauracao de zona {zona}"
+            'rest': "Restauración de zona {zona}"
              },
         133: {'*': "Disparo de zona 24h {zona}"},
         146: {'*': "Disparo silencioso {zona}"},
@@ -26,76 +26,76 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
             'rest': "Retorno de energia AC"
              },
         342: {
-             'aber': "Falta de energia AC em componente sem fio {zona}",
-             'rest': "Retorno energia AC em componente sem fio {zona}"
+             'aber': "Falta de energia AC en componente inalámbrico {zona}",
+             'rest': "Retorno energia AC en componente inalámbrico {zona}"
              },
         302: {
-            'aber': "Bateria do sistema baixa",
-            'rest': "Recuperacao bateria do sistema baixa"
+            'aber': "Bateria del sistema baja",
+            'rest': "Recuperación bateria del sistema baja"
              },
-        305: {'*': "Reset do sistema"},
-        306: {'*': "Alteracao programacao"},
+        305: {'*': "Reset del sistema"},
+        306: {'*': "Alteración programación"},
         311: {
             'aber': "Bateria ausente",
-            'rest': "Recuperacao bateria ausente"
+            'rest': "Recuperación bateria ausente"
              },
         351: {
-            'aber': "Corte linha telefonica",
-            'rest': "Restauro linha telefonica"
+            'aber': "Corte linea telefonica",
+            'rest': "Restauro linea telefonica"
              },
-        354: {'*': "Falha ao comunicar evento"},
+        354: {'*': "Falla al comunicar evento"},
         147: {
-            'aber': "Falha de supervisao {zona}",
-            'rest': "Recuperacao falha de supervisao {zona}"
+            'aber': "Falla de supervisión {zona}",
+            'rest': "Recuperación falla de supervisión {zona}"
              },
         145: {
-             'aber': "Tamper em dispositivo expansor {zona}",
-             'rest': "Restauro tamper em dispositivo expansor {zona}"
+             'aber': "Tamper en dispositivo expansor {zona}",
+             'rest': "Restauro tamper en dispositivo expansor {zona}"
               },
         383: {
-              'aber': "Tamper em sensor {zona}",
-              'rest': "Restauro tamper em sensor {zona}"
+              'aber': "Tamper en sensor {zona}",
+              'rest': "Restauro tamper en sensor {zona}"
               },
         384: {
-            'aber': "Bateria baixa em componente sem fio {zona}",
-            'rest': "Recuperacao bateria baixa em componente sem fio {zona}"
+            'aber': "Bateria baja en componente inalámbrico {zona}",
+            'rest': "Recuperación bateria baja en componente inalámbrico {zona}"
              },
         401: {
-             'rest': "Ativacao manual P{particao}",
-             'aber': "Desativacao manual P{particao}"
+             'rest': "Activación manual P{partición}",
+             'aber': "Desactivación manual P{partición}"
              },
         403: {
-             'rest': "Ativacao automatica P{particao}",
-             'aber': "Desativacao automatica P{particao}"
+             'rest': "Activación automática P{partición}",
+             'aber': "Desactivación automática P{partición}"
              },
         404: {
-            'rest': "Ativacao remota P{particao}",
-            'aber': "Desativacao remota P{particao}",
+            'rest': "Activación remota P{partición}",
+            'aber': "Desactivación remota P{partición}",
              },
         407: {
-            'rest': "Ativacao remota app P{particao}",
-            'aber': "Desativacao remota app P{particao}",
+            'rest': "Activación remota app P{partición}",
+            'aber': "Desactivación remota app P{partición}",
              },
-        408: {'*': "Ativacao por uma tecla P{particao}"},
-        410: {'*': "Acesso remoto"},
-        461: {'*': "Senha incorreta"},
+        408: {'*': "Activación por una tecla P{partición}"},
+        410: {'*': "Acceso remoto"},
+        461: {'*': "Contraseña incorrecta"},
         533: {
-             'aber': "Adicao de zona {zona}",
-             'rest': "Remocao de zona {zona}"
+             'aber': "Adición de zona {zona}",
+             'rest': "Remoción de zona {zona}"
              },
         570: {
              'aber': "Bypass de zona {zona}",
              'rest': "Cancel bypass de zona {zona}"
              },
-        602: {'*': "Teste periodico"},
+        602: {'*': "Test periódico"},
         621: {'*': "Reset do buffer de eventos"},
-        601: {'*': "Teste manual"},
-        616: {'*': "Solicitacao de manutencao"},
+        601: {'*': "Test manual"},
+        616: {'*': "Solicitud de mantenimiento"},
         422: {
-            'aber': "Acionamento de PGM {zona}",
-            'rest': "Desligamento de PGM {zona}"
+            'aber': "Accionamento de PGM {zona}",
+            'rest': "Descativación de PGM {zona}"
              },
-        625: {'*': "Data e hora reiniciados"}
+        625: {'*': "Fecha y hora reiniciados"}
     }
 
     def __init__(self, addr, sock):
@@ -115,24 +115,24 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
         self.ip_addr = addr[0]
 
         if not Tratador.valida_maxconn():
-            self.log_info("numero maximo de conexoes atingido - conexao ignorada")
+            self.log_info("numero maximo de conexiones alcanzado - conexion ignorada")
             self.ignorar = True
 
     def timeout_comunicacao(self, _):
-        self.log_info("timeout de comunicacao")
+        self.log_info("timeout de comunicación")
         self.destroy()
 
     def timeout_msgincompleta(self, _):
-        self.log_warn("timeout de mensagem incompleta, buf =", self.hexprint(self.recv_buf))
+        self.log_warn("timeout de mensaje incompleta, buf =", self.hexprint(self.recv_buf))
         self.destroy()
 
     def timeout_identificacao(self, _):
-        self.log_warn("timeout de identificacao")
+        self.log_warn("timeout de identificacion")
         self.destroy()
 
     def _envia(self, resposta):
         self.send(bytearray(resposta))
-        self.log_debug("enviada resposta", self.hexprint(resposta))
+        self.log_debug("respuesta enviada", self.hexprint(resposta))
 
     def enquadrar(self, dados):
         dados = [len(dados)] + dados
@@ -157,11 +157,11 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
             self.to_processa = self.timeout("proc_msg", self.backoff, self.processar_msg)
 
     def shutdown_callback(self):
-        self.log_info("fechada")
-        super().shutdown_callback() # impl padrão = fechar
+        self.log_info("cerrada")
+        super().shutdown_callback() # impl padrão = cerrar
 
     def send_callback(self):
-        self.log_debug("envio dados")
+        self.log_debug("envio datos")
         super().send_callback()
 
     def processar_msg(self, _):
@@ -174,7 +174,7 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
 
     def consome_msg(self):
         if self.consome_frame_curto() or self.consome_frame_longo():
-            # Processou uma mensagem
+            # Processou uma mensaje
             if self.to_incompleta:
                 self.to_incompleta.cancel()
                 self.to_incompleta = None
@@ -203,7 +203,7 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
 
         self.backoff /= 2
         self.backoff = max(self.backoff, Tratador.backoff_minimo)
-        self.log_debug("backoff reduzido para %f" % self.backoff)
+        self.log_debug("backoff reducido para %f" % self.backoff)
 
         if self.backoff > Tratador.backoff_minimo:
             self.to_backoff = self.timeout("recuar_backoff",
@@ -213,7 +213,7 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
     def consome_frame_curto(self):
         if self.recv_buf and self.recv_buf[0] == 0xf7:
             self.recv_buf = self.recv_buf[1:]
-            self.log_debug("heartbeat da central")
+            self.log_debug("heartbeat de la central")
             resposta = [0xfe]
             self.envia_curto(resposta)
             return True
@@ -232,15 +232,15 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
 
         # checksum de pacote sufixado com checksum resulta em 0
         if self.checksum(rawmsg) != 0x00:
-            self.log_warn("checksum errado, rawmsg =", self.hexprint(rawmsg))
+            self.log_warn("checksum erróneo, rawmsg =", self.hexprint(rawmsg))
             return True
 
-        # Mantém checksum no final pois, em algumas mensagens, o último octeto
+        # Mantém checksum no final pois, em algumas mensajes, o último octeto
         # calcula como checksum mas tem outro significado (e.g. 0xb5)
         msg = rawmsg[1:]
 
         if not msg:
-            self.log_warn("mensagem nula")
+            self.log_warn("mensaje nulo")
             return True
 
         tipo = msg[0]
@@ -255,7 +255,7 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
         elif tipo == 0xb5:
             self.evento_alarme(msg, True)
         else:
-            self.log_warn("solicitacao desconhecida %02x payload =" % tipo, self.hexprint(msg))
+            self.log_warn("solicitud desconocida %02x payload =" % tipo, self.hexprint(msg))
             self.resposta_generica(msg)
         return True
 
@@ -267,24 +267,24 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
         resposta = [0xfe]
 
         if len(msg) != 7:
-            self.log_warn("identificacao central: tamanho inesperado,", self.hexprint(msg))
+            self.log_warn("identificacion central: tamaño inesperado,", self.hexprint(msg))
             self.envia_curto(resposta)
 
         canal = msg[0] # 'E' (0x45)=Ethernet, 'G'=GPRS, 'H'=GPRS2
         conta = self.from_bcd(msg[1:3])
         macaddr = msg[3:6]
         macaddr_s = (":".join(["%02x" % i for i in macaddr])).lower()
-        self.log_info("identificacao central conta %d mac %s" % (conta, macaddr_s))
+        self.log_info("identificacion central cuenta %d mac %s" % (conta, macaddr_s))
 
         if not Tratador.valida_central(macaddr_s):
-            self.log_info("central nao autorizada")
+            self.log_info("central no autorizada")
             self.ignorar = True
             return
 
-        # Testa novamente maxconn pois há uma "janela" de tempo entre conexão e
-        # identificação onde mais conexões podem ter sido aceitas
+        # Testa novamente maxconn pois há uma "ventana" de tempo entre conexión e
+        # identificación donde más conexiones pueden haber sido aceptadas
         if not Tratador.valida_maxconn():
-            self.log_info("numero maximo de conexoes atingido - conexao ignorada")
+            self.log_info("numero maximo de conexiones alcanzado - conexion ignorada")
             self.ignorar = True
             return
 
@@ -296,7 +296,7 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
         self.envia_curto(resposta)
 
     def solicita_data_hora(self, msg):
-        self.log_debug("solicitacao de data/hora pela central")
+        self.log_debug("solicitud de fecha/hora por la central")
         agora = datetime.datetime.now()
         # proto: 0 = domingo; weekday(): 0 = segunda
         dow = (agora.weekday() + 1) % 7
@@ -313,14 +313,14 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
         p = os.popen(Tratador.gancho_msg + " " + shlex.quote(msgw), 'w')
         p.close()
 
-    def ev_para_gancho(self, codigo, particao, zona, qualificador):
-        p = os.popen("%s %d %d %d %d" % (Tratador.gancho_ev, codigo, particao, zona, qualificador), 'w')
+    def ev_para_gancho(self, codigo, partición, zona, qualificador):
+        p = os.popen("%s %d %d %d %d" % (Tratador.gancho_ev, codigo, partición, zona, qualificador), 'w')
         p.close()
 
     def evento_alarme(self, msg, com_foto):
         compr = com_foto and 20 or 17
         if len(msg) != compr:
-            self.log_warn("evento de alarme de tamanho inesperado,", self.hexprint(msg))
+            self.log_warn("evento de alarma de tamaño inesperado,", self.hexprint(msg))
             resposta = [0xfe]
             self.envia_curto(resposta)
             return
@@ -330,14 +330,14 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
         tipo_msg = self.contact_id_decode(msg[5:7]) # 18 decimal = Contact ID
         qualificador = msg[7]
         codigo = self.contact_id_decode(msg[8:11])
-        particao = self.contact_id_decode(msg[11:13])
+        partición = self.contact_id_decode(msg[11:13])
         zona = self.contact_id_decode(msg[13:16])
         if com_foto:
             checksum = msg[16] # truque do protocolo de reposicionar o checksum
             indice = msg[17] * 256 + msg[18]
             nr_fotos = msg[19]
 
-        self.ev_para_gancho(codigo, particao, zona, qualificador)
+        self.ev_para_gancho(codigo, partición, zona, qualificador)
 
         desconhecido = True
         if tipo_msg == 18 and codigo in Tratador.eventos_contact_id:
@@ -357,8 +357,8 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
                 scodigo = Tratador.eventos_contact_id[codigo][squalif]
                 fotos = ""
                 if com_foto:
-                    fotos = "(com fotos, i=%d n=%d)" % (indice, nr_fotos)
-                descricao_humana = scodigo.format(zona=zona, particao=particao)
+                    fotos = "(con fotos, i=%d n=%d)" % (indice, nr_fotos)
+                descricao_humana = scodigo.format(zona=zona, partición=partición)
                 self.log_info(descricao_humana, fotos)
                 self.msg_para_gancho(descricao_humana, fotos)
 
@@ -367,9 +367,9 @@ class Tratador(TCPServerHandler, UtilsProtocolo):
                         Tratador.tratador_de_fotos.enfileirar(self.ip_addr, indice, n)
 
         if desconhecido:
-            msg = "Evento de alarme canal %02x contact_id %d tipo %d qualificador %d " \
-                  "codigo %d particao %d zona %d" % \
-                  (canal, contact_id, tipo_msg, qualificador, codigo, particao, zona)
+            msg = "Evento de alarma canal %02x contact_id %d tipo %d qualificador %d " \
+                  "codigo %d partición %d zona %d" % \
+                  (canal, contact_id, tipo_msg, qualificador, codigo, partición, zona)
             self.log_info(msg)
             self.msg_para_gancho(msg)
 

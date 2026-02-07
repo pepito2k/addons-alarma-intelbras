@@ -1,20 +1,20 @@
 """Comandos de Controle de Sirene (0x43 e 0x63).
 
-Este módulo implementa os comandos para ligar e desligar a sirene da central.
+Este módulo implementa los comandos para ligar e apagar a sirene da central.
 
 Comandos:
     - 0x43: Liga a sirene
     - 0x63: Desliga a sirene
 
-Estrutura dos comandos:
-    Ambos são frames curtos sem conteúdo adicional além do comando.
-    O frame ISECMobile contém apenas: delimitador, senha, comando, delimitador.
+Estructura dos comandos:
+    Ambos são frames curtos sem contenido adicional além do comando.
+    El frame ISECMobile contém apenas: delimitador, contraseña, comando, delimitador.
 
 Exemplos da documentação:
-    Ligar sirene com senha 1234:
+    Ligar sirene com contraseña 1234:
         08 E9 21 31 32 33 34 43 21 59
     
-    Desligar sirene com senha 1234:
+    Desligar sirene com contraseña 1234:
         0A E9 21 31 32 33 34 63 21 79
 """
 
@@ -28,7 +28,7 @@ class SirenCommand(Command):
     """Comando para controlar a sirene da central.
     
     Attributes:
-        turn_on: Se True, liga a sirene (0x43). Se False, desliga (0x63).
+        turn_on: Si True, liga a sirene (0x43). Si False, apaga (0x63).
     """
 
     def __init__(
@@ -36,11 +36,11 @@ class SirenCommand(Command):
         password: str,
         turn_on: bool,
     ) -> None:
-        """Inicializa o comando de controle de sirene.
+        """Inicializa el comando de controle de sirene.
         
         Args:
-            password: Senha do usuário (4-6 dígitos).
-            turn_on: Se True, liga a sirene. Se False, desliga.
+            password: Contraseña do usuario (4-6 dígitos).
+            turn_on: Si True, liga a sirene. Si False, apaga.
         """
         super().__init__(password)
         self._turn_on = turn_on
@@ -52,17 +52,17 @@ class SirenCommand(Command):
 
     @property
     def turn_on(self) -> bool:
-        """Se o comando liga a sirene."""
+        """Si o comando liga a sirene."""
         return self._turn_on
 
     def build_content(self) -> bytes:
-        """Constrói o conteúdo do comando.
+        """Construye o contenido do comando.
         
-        Os comandos de sirene não têm conteúdo adicional além do comando em si.
-        O conteúdo é vazio, pois o comando já está no código.
+        Os comandos de sirene no têm contenido adicional além do comando em si.
+        El contenido é vazio, pois o comando já está no código.
         
         Returns:
-            Bytes vazios (o comando está no código, não no conteúdo).
+            Bytes vazios (o comando está no código, no no contenido).
         """
         return bytes()
 
@@ -71,22 +71,22 @@ class SirenCommand(Command):
         """Cria comando para ligar a sirene.
         
         Args:
-            password: Senha do usuário.
+            password: Contraseña do usuario.
             
         Returns:
-            Instância de SirenCommand para ligar.
+            Instancia de SirenCommand para ligar.
         """
         return cls(password, turn_on=True)
 
     @classmethod
     def turn_off_siren(cls, password: str) -> Self:
-        """Cria comando para desligar a sirene.
+        """Cria comando para apagar a sirene.
         
         Args:
-            password: Senha do usuário.
+            password: Contraseña do usuario.
             
         Returns:
-            Instância de SirenCommand para desligar.
+            Instancia de SirenCommand para apagar.
         """
         return cls(password, turn_on=False)
 

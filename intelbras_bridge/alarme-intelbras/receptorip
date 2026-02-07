@@ -10,7 +10,7 @@ from alarmeitbl.tratador import Tratador, TCPServerEventLoop, TCPListener, Handl
 from alarmeitbl.tratador_fotos import TratadorDeFotos
 
 def usage():
-    print("Modo de usar: %s <arquivo de configuração>" % sys.argv[0])
+    print("Modo de uso: %s <archivo de configuración>" % sys.argv[0])
     sys.exit(1)
 
 def parse_config():
@@ -75,7 +75,7 @@ Tratador.valida_central = valida_central
 Tratador.valida_maxconn = valida_maxconn
 
 # SOLUCIÓN: Asignar el comando "no-op" a todos los ganchos para desactivarlos de forma segura
-Tratador.gancho_arquivo = ":"
+Tratador.gancho_archivo = ":"
 Tratador.gancho_central = ":"
 Tratador.gancho_ev = ":"
 Tratador.gancho_msg = ":"
@@ -93,7 +93,7 @@ def central_nao_conectada(to_obj):
             central_nao_conectada.alarme = 0
             # Se registra la reconexión
             Log.info("INFO: Central(es) conectada(s) nuevamente.")
-    
+
     to_obj.restart()
 
 central_nao_conectada.alarme = 0
@@ -103,11 +103,11 @@ Timeout.new("central_nc", 3600, central_nao_conectada)
 Log.info(f"Creando servidor TCP en {host}:{port}")
 try:
     ev = TCPServerEventLoop((host, port), TCPListener, Tratador)
-    Log.info("Servidor TCP creado. Aguardando conexoes...")
+    Log.info("Servidor TCP creado. Aguardando conexiones...")
     ev.loop()
 
 except KeyboardInterrupt:
-    Log.info("Interrumpido pelo usuario.")
+    Log.info("Interrumpido por el usuario.")
     print("\nServidor detenido por el usuario.")
 except Exception as e:
     Log.error(f"Error fatal en el loop principal: {e}")

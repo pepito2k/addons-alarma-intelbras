@@ -141,13 +141,13 @@ async def run_server(port: int, password: str, verbose: bool):
                 print(f"     MAC: ...{info.mac_suffix}")
                 print()
         else:
-            logger.info(f"📦 Frame recebido: cmd=0x{frame.command:02X} data={frame.content.hex()}")
+            logger.info(f"📦 Frame recibido: cmd=0x{frame.command:02X} data={frame.content.hex()}")
     
     # Inicia servidor
     await server.start()
     
     print(f"  🔌 Servidor iniciado na porta {port}")
-    print(f"  ⏳ Aguardando conexão da central...")
+    print(f"  ⏳ Esperando conexión da central...")
     print()
     print("  Configure sua central AMT para conectar em:")
     print(f"    IP: <IP desta máquina>")
@@ -160,7 +160,7 @@ async def run_server(port: int, password: str, verbose: bool):
     stop_event = asyncio.Event()
     
     def read_stdin_nonblocking() -> str | None:
-        """Lê stdin sem bloquear, retorna None se não há input."""
+        """Lê stdin sem bloquear, devuelve None se no hay entrada."""
         if select.select([sys.stdin], [], [], 0)[0]:
             return sys.stdin.readline()
         return None
@@ -175,7 +175,7 @@ async def run_server(port: int, password: str, verbose: bool):
                 line = await loop.run_in_executor(None, read_stdin_nonblocking)
                 
                 if line is None:
-                    # Sem input, aguarda um pouco antes de verificar novamente
+                    # Sem input, espera um pouco antes de verificar novamente
                     await asyncio.sleep(0.1)
                     continue
                 
@@ -192,13 +192,13 @@ async def run_server(port: int, password: str, verbose: bool):
                 elif line == 'help':
                     print()
                     print("  Comandos disponíveis:")
-                    print("    arm [a|b|c|d|stay]   - Armar alarme (todas ou partição específica)")
-                    print("    disarm [a|b|c|d]     - Desarmar alarme (todas ou partição específica)")
+                    print("    arm [a|b|c|d|stay]   - Armar alarme (todas ou partición específica)")
+                    print("    disarm [a|b|c|d]     - Desarmar alarme (todas ou partición específica)")
                     print("    pgm <1-19> on|off    - Controlar PGM (ex: pgm 1 on)")
-                    print("    siren on|off          - Ligar/desligar sirene (ex: siren on)")
+                    print("    siren on|off          - Ligar/apagar sirene (ex: siren on)")
                     print("    info                 - Solicitar status completo da central (0x5B)")
-                    print("    info-partial         - Solicitar status parcial da central (0x5A)")
-                    print("    status               - Ver status da conexão TCP")
+                    print("    info-partial         - Solicitar estado parcial da central (0x5A)")
+                    print("    status               - Ver status da conexión TCP")
                     print("    quit                 - Encerrar servidor")
                     print()
                 
@@ -206,7 +206,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     parts = line.split()
                     partition = parts[1] if len(parts) > 1 else None
                     
-                    # Verifica conexão
+                    # Verifica conexión
                     connections = server.connections.all()
                     if not connections:
                         logger.error("❌ Nenhuma central conectada")
@@ -228,7 +228,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     else:
                         cmd = ActivationCommand.arm_all(password)
                     
-                    logger.info(f"📤 Enviando comando de ativação...")
+                    logger.info(f"📤 Enviando comando de activación...")
                     
                     try:
                         response = await server.send_command(
@@ -238,12 +238,12 @@ async def run_server(port: int, password: str, verbose: bool):
                         )
                         
                         if response.is_success:
-                            logger.info("✅ Alarme armado com sucesso!")
+                            logger.info("✅ Alarme armado com éxito!")
                         else:
                             logger.error(f"❌ Erro: {response.message}")
                     
                     except TimeoutError:
-                        logger.error("❌ Timeout aguardando resposta")
+                        logger.error("❌ Timeout esperando respuesta")
                     except Exception as e:
                         logger.error(f"❌ Erro: {e}")
                 
@@ -251,7 +251,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     parts = line.split()
                     partition = parts[1] if len(parts) > 1 else None
                     
-                    # Verifica conexão
+                    # Verifica conexión
                     connections = server.connections.all()
                     if not connections:
                         logger.error("❌ Nenhuma central conectada")
@@ -271,7 +271,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     else:
                         cmd = DeactivationCommand.disarm_all(password)
                     
-                    logger.info(f"📤 Enviando comando de desativação...")
+                    logger.info(f"📤 Enviando comando de desactivación...")
                     
                     try:
                         response = await server.send_command(
@@ -281,12 +281,12 @@ async def run_server(port: int, password: str, verbose: bool):
                         )
                         
                         if response.is_success:
-                            logger.info("✅ Alarme desarmado com sucesso!")
+                            logger.info("✅ Alarme desarmado com éxito!")
                         else:
                             logger.error(f"❌ Erro: {response.message}")
                     
                     except TimeoutError:
-                        logger.error("❌ Timeout aguardando resposta")
+                        logger.error("❌ Timeout esperando respuesta")
                     except Exception as e:
                         logger.error(f"❌ Erro: {e}")
                 
@@ -312,7 +312,7 @@ async def run_server(port: int, password: str, verbose: bool):
                         print("  Ação deve ser 'on' ou 'off'")
                         continue
                     
-                    # Verifica conexão
+                    # Verifica conexión
                     connections = server.connections.all()
                     if not connections:
                         logger.error("❌ Nenhuma central conectada")
@@ -326,7 +326,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     else:
                         cmd = PGMCommand.turn_off(password, pgm_num)
                     
-                    action_str = "ligar" if action == 'on' else "desligar"
+                    action_str = "ligar" if action == 'on' else "apagar"
                     logger.info(f"📤 Enviando comando para {action_str} PGM {pgm_num}...")
                     
                     try:
@@ -337,12 +337,12 @@ async def run_server(port: int, password: str, verbose: bool):
                         )
                         
                         if response.is_success:
-                            logger.info(f"✅ PGM {pgm_num} {'ligada' if action == 'on' else 'desligada'} com sucesso!")
+                            logger.info(f"✅ PGM {pgm_num} {'encendida' if action == 'on' else 'apagada'} com éxito!")
                         else:
                             logger.error(f"❌ Erro: {response.message}")
                     
                     except TimeoutError:
-                        logger.error("❌ Timeout aguardando resposta")
+                        logger.error("❌ Timeout esperando respuesta")
                     except Exception as e:
                         logger.error(f"❌ Erro: {e}")
                 
@@ -358,7 +358,7 @@ async def run_server(port: int, password: str, verbose: bool):
                         print("  Ação deve ser 'on' ou 'off'")
                         continue
                     
-                    # Verifica conexão
+                    # Verifica conexión
                     connections = server.connections.all()
                     if not connections:
                         logger.error("❌ Nenhuma central conectada")
@@ -372,7 +372,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     else:
                         cmd = SirenCommand.turn_off_siren(password)
                     
-                    action_str = "ligar" if action == 'on' else "desligar"
+                    action_str = "ligar" if action == 'on' else "apagar"
                     logger.info(f"📤 Enviando comando para {action_str} sirene...")
                     
                     try:
@@ -383,17 +383,17 @@ async def run_server(port: int, password: str, verbose: bool):
                         )
                         
                         if response.is_success:
-                            logger.info(f"✅ Sirene {'ligada' if action == 'on' else 'desligada'} com sucesso!")
+                            logger.info(f"✅ Sirene {'encendida' if action == 'on' else 'apagada'} com éxito!")
                         else:
                             logger.error(f"❌ Erro: {response.message}")
                     
                     except TimeoutError:
-                        logger.error("❌ Timeout aguardando resposta")
+                        logger.error("❌ Timeout esperando respuesta")
                     except Exception as e:
                         logger.error(f"❌ Erro: {e}")
                 
                 elif line == 'info':
-                    # Verifica conexão
+                    # Verifica conexión
                     connections = server.connections.all()
                     if not connections:
                         logger.error("❌ Nenhuma central conectada")
@@ -413,12 +413,12 @@ async def run_server(port: int, password: str, verbose: bool):
                             wait_response=True,
                         )
                         
-                        # Log detalhado da resposta
+                        # Log detalhado da respuesta
                         logger.debug(f"📥 Resposta recebida:")
                         logger.debug(f"   Tipo: {response.response_type}")
                         logger.debug(f"   Código: 0x{response.code:02X}")
-                        logger.debug(f"   Tamanho dados: {len(response.data)} bytes")
-                        logger.debug(f"   Dados (hex): {response.data.hex(' ') if response.data else '(vazio)'}")
+                        logger.debug(f"   Tamaño datos: {len(response.data)} bytes")
+                        logger.debug(f"   Datos (hex): {response.data.hex(' ') if response.data else '(vazio)'}")
                         logger.debug(f"   is_success: {response.is_success}")
                         logger.debug(f"   Mensagem: {response.message}")
                         logger.debug(f"   Frame bruto (hex): {response.raw_frame.build().hex(' ')}")
@@ -451,10 +451,10 @@ async def run_server(port: int, password: str, verbose: bool):
                                 if status.central_datetime:
                                     print(f"  Data/Hora: {status.central_datetime.strftime('%d/%m/%Y %H:%M')}")
                                 
-                                # Partições
+                                # Particiones
                                 if status.partitions.partitions_enabled:
                                     print()
-                                    print("  Partições:")
+                                    print("  Particiones:")
                                     print(f"    A: {'🔴 Armada' if status.partitions.partition_a_armed else '🟢 Desarmada'}")
                                     print(f"    B: {'🔴 Armada' if status.partitions.partition_b_armed else '🟢 Desarmada'}")
                                     print(f"    C: {'🔴 Armada' if status.partitions.partition_c_armed else '🟢 Desarmada'}")
@@ -473,7 +473,7 @@ async def run_server(port: int, password: str, verbose: bool):
                                 active_pgms = status.pgm.get_active_pgms()
                                 if active_pgms:
                                     print()
-                                    print(f"  PGMs ligadas: {active_pgms}")
+                                    print(f"  PGMs encendidas: {active_pgms}")
                                 
                                 # Problemas
                                 if status.problems.has_problems:
@@ -492,29 +492,29 @@ async def run_server(port: int, password: str, verbose: bool):
                                 print("  ═══════════════════════════════════════")
                                 print()
                             else:
-                                logger.error(f"❌ Não foi possível parsear status (recebido {len(response.data)} bytes)")
-                                logger.debug(f"   Dados brutos: {response.data.hex(' ')}")
+                                logger.error(f"❌ No fue posible analizar status (recibido {len(response.data)} bytes)")
+                                logger.debug(f"   Datos brutos: {response.data.hex(' ')}")
                         else:
                             logger.error(f"❌ Erro: {response.message}")
-                            logger.debug(f"   Tipo resposta: {response.response_type}")
+                            logger.debug(f"   Tipo respuesta: {response.response_type}")
                             logger.debug(f"   Código: 0x{response.code:02X}")
-                            logger.debug(f"   Dados recebidos: {len(response.data)} bytes")
+                            logger.debug(f"   Datos recibidos: {len(response.data)} bytes")
                             if response.data:
-                                logger.debug(f"   Dados (hex): {response.data.hex(' ')}")
+                                logger.debug(f"   Datos (hex): {response.data.hex(' ')}")
                             logger.debug(f"   Frame completo (hex): {response.raw_frame.build().hex(' ')}")
                             if response.raw_frame.content:
                                 logger.debug(f"   Frame content (hex): {response.raw_frame.content.hex(' ')}")
                                 logger.debug(f"   Frame content length: {len(response.raw_frame.content)}")
                     
                     except TimeoutError:
-                        logger.error("❌ Timeout aguardando resposta")
+                        logger.error("❌ Timeout esperando respuesta")
                     except Exception as e:
                         logger.error(f"❌ Erro: {e}")
                         import traceback
                         logger.debug(f"   Traceback completo:\n{traceback.format_exc()}")
                 
                 elif line == 'info-partial':
-                    # Verifica conexão
+                    # Verifica conexión
                     connections = server.connections.all()
                     if not connections:
                         logger.error("❌ Nenhuma central conectada")
@@ -524,7 +524,7 @@ async def run_server(port: int, password: str, verbose: bool):
                     
                     cmd = PartialStatusRequestCommand(password)
                     frame_to_send = cmd.build_net_frame()
-                    logger.info("📤 Solicitando status parcial da central (0x5A)...")
+                    logger.info("📤 Solicitando estado parcial da central (0x5A)...")
                     logger.debug(f"📤 Frame enviado: {frame_to_send.build().hex(' ')}")
                     
                     try:
@@ -534,21 +534,21 @@ async def run_server(port: int, password: str, verbose: bool):
                             wait_response=True,
                         )
                         
-                        # Log detalhado da resposta
+                        # Log detalhado da respuesta
                         logger.debug(f"📥 Resposta recebida:")
                         logger.debug(f"   Tipo: {response.response_type}")
                         logger.debug(f"   Código: 0x{response.code:02X}")
-                        logger.debug(f"   Tamanho dados: {len(response.data)} bytes")
-                        logger.debug(f"   Dados (hex): {response.data.hex(' ') if response.data else '(vazio)'}")
+                        logger.debug(f"   Tamaño datos: {len(response.data)} bytes")
+                        logger.debug(f"   Datos (hex): {response.data.hex(' ') if response.data else '(vazio)'}")
                         logger.debug(f"   is_success: {response.is_success}")
                         logger.debug(f"   Mensagem: {response.message}")
                         logger.debug(f"   Frame bruto (hex): {response.raw_frame.build().hex(' ')}")
                         logger.debug(f"   Frame content: {response.raw_frame.content.hex(' ') if response.raw_frame.content else '(vazio)'}")
                         logger.debug(f"   Frame content length: {len(response.raw_frame.content)}")
                         
-                        # Para status parcial, a resposta pode ser DATA com 43 bytes
+                        # Para estado parcial, a respuesta pode ser DATA com 43 bytes
                         if response.response_type == ResponseType.DATA and len(response.raw_frame.content) >= 43:
-                            # Resposta com dados grandes - parseia diretamente do content
+                            # Resposta com datos grandes - analiza diretamente do content
                             status = PartialCentralStatus.try_parse(response.raw_frame.content)
                             if status:
                                 print()
@@ -570,14 +570,14 @@ async def run_server(port: int, password: str, verbose: bool):
                                 if status.central_datetime:
                                     print(f"  Data/Hora: {status.central_datetime.strftime('%d/%m/%Y %H:%M')}")
                                 
-                                # Partições
+                                # Particiones
                                 print()
-                                print("  Partições:")
+                                print("  Particiones:")
                                 if status.partitions.partitions_enabled:
                                     print(f"    A: {'🔴 Armada' if status.partitions.partition_a_armed else '🟢 Desarmada'}")
                                     print(f"    B: {'🔴 Armada' if status.partitions.partition_b_armed else '🟢 Desarmada'}")
                                 else:
-                                    print("    Partições desabilitadas")
+                                    print("    Particiones desabilitadas")
                                 
                                 # Zonas
                                 print()
@@ -600,30 +600,30 @@ async def run_server(port: int, password: str, verbose: bool):
                                 else:
                                     print("    Em bypass: Nenhuma")
                                 
-                                # Tamper e curto-circuito
+                                # Tamper e cortocircuito
                                 tamper_zones = sorted(status.zones.tamper_zones)
                                 if tamper_zones:
                                     print(f"    Com tamper: {tamper_zones}")
                                 
                                 short_zones = sorted(status.zones.short_circuit_zones)
                                 if short_zones:
-                                    print(f"    Em curto-circuito: {short_zones}")
+                                    print(f"    Em cortocircuito: {short_zones}")
                                 
-                                # Bateria baixa sensores sem fio
+                                # Bateria baixa sensores sem cable
                                 low_bat_zones = sorted(status.zones.low_battery_zones)
                                 if low_bat_zones:
-                                    print(f"    Bateria baixa (sem fio): {low_bat_zones}")
+                                    print(f"    Bateria baixa (sem cable): {low_bat_zones}")
                                 
                                 # Sirene e PGMs
                                 print()
                                 print("  Saídas:")
-                                print(f"    Sirene: {'🔊 LIGADA' if status.siren_on else '🔇 Desligada'}")
+                                print(f"    Sirene: {'🔊 LIGADA' if status.siren_on else '🔇 Desencendida'}")
                                 
                                 active_pgms = status.pgm.get_active_pgms()
                                 if active_pgms:
-                                    print(f"    PGMs ligadas: {active_pgms}")
+                                    print(f"    PGMs encendidas: {active_pgms}")
                                 else:
-                                    print("    PGMs ligadas: Nenhuma")
+                                    print("    PGMs encendidas: Nenhuma")
                                 
                                 # Problemas
                                 print()
@@ -636,9 +636,9 @@ async def run_server(port: int, password: str, verbose: bool):
                                     if status.problems.battery_absent:
                                         print("    - Bateria ausente ou invertida")
                                     if status.problems.battery_short:
-                                        print("    - Bateria em curto-circuito")
+                                        print("    - Bateria em cortocircuito")
                                     if status.problems.aux_overload:
-                                        print("    - Sobrecarga na saída auxiliar")
+                                        print("    - Sobrecarga na salida auxiliar")
                                     if status.problems.keyboard_problems:
                                         print(f"    - Problemas nos teclados: {status.problems.keyboard_problems}")
                                     if status.problems.keyboard_tamper:
@@ -648,11 +648,11 @@ async def run_server(port: int, password: str, verbose: bool):
                                     if status.problems.siren_wire_cut:
                                         print("    - Fio da sirene cortado")
                                     if status.problems.siren_short:
-                                        print("    - Curto-circuito no fio da sirene")
+                                        print("    - Curto-circuito no cable da sirene")
                                     if status.problems.phone_line_cut:
                                         print("    - Linha telefônica cortada")
                                     if status.problems.event_comm_failure:
-                                        print("    - Falha ao comunicar evento")
+                                        print("    - Fallo ao comunicar evento")
                                 else:
                                     print("  ✅ Nenhum problema detectado")
                                 
@@ -660,28 +660,28 @@ async def run_server(port: int, password: str, verbose: bool):
                                 print("  ═══════════════════════════════════════")
                                 print()
                             else:
-                                logger.error(f"❌ Não foi possível parsear status parcial (recebido {len(response.raw_frame.content)} bytes)")
+                                logger.error(f"❌ No fue posible analizar estado parcial (recibido {len(response.raw_frame.content)} bytes)")
                         elif response.is_success and response.data:
-                            # Resposta ACK com dados (formato antigo)
+                            # Resposta ACK com datos (formato antigo)
                             status = PartialCentralStatus.try_parse(response.data)
                             if status:
-                                logger.info("✅ Status parcial recebido e parseado!")
+                                logger.info("✅ Status parcial recibido e analizado!")
                             else:
-                                logger.error(f"❌ Não foi possível parsear status parcial (recebido {len(response.data)} bytes)")
+                                logger.error(f"❌ No fue posible analizar estado parcial (recibido {len(response.data)} bytes)")
                         else:
                             logger.error(f"❌ Erro: {response.message}")
-                            logger.debug(f"   Tipo resposta: {response.response_type}")
+                            logger.debug(f"   Tipo respuesta: {response.response_type}")
                             logger.debug(f"   Código: 0x{response.code:02X}")
-                            logger.debug(f"   Dados recebidos: {len(response.data)} bytes")
+                            logger.debug(f"   Datos recibidos: {len(response.data)} bytes")
                             if response.data:
-                                logger.debug(f"   Dados (hex): {response.data.hex(' ')}")
+                                logger.debug(f"   Datos (hex): {response.data.hex(' ')}")
                             logger.debug(f"   Frame completo (hex): {response.raw_frame.build().hex(' ')}")
                             if response.raw_frame.content:
                                 logger.debug(f"   Frame content (hex): {response.raw_frame.content.hex(' ')}")
                                 logger.debug(f"   Frame content length: {len(response.raw_frame.content)}")
                     
                     except TimeoutError:
-                        logger.error("❌ Timeout aguardando resposta")
+                        logger.error("❌ Timeout esperando respuesta")
                     except Exception as e:
                         logger.error(f"❌ Erro: {e}")
                         import traceback
@@ -696,11 +696,11 @@ async def run_server(port: int, password: str, verbose: bool):
                         if conn.metadata.get("account"):
                             print(f"      Conta: {conn.metadata['account']}")
                     if connected_at:
-                        print(f"  Heartbeats recebidos: {heartbeat_count}")
+                        print(f"  Heartbeats recibidos: {heartbeat_count}")
                     print()
                 
                 else:
-                    print(f"  Comando desconhecido: {line}")
+                    print(f"  Comando desconocido: {line}")
                     print("  Digite 'help' para ver comandos disponíveis")
             
             except EOFError:
@@ -714,7 +714,7 @@ async def run_server(port: int, password: str, verbose: bool):
     try:
         await command_loop()
     except KeyboardInterrupt:
-        logger.info("Interrompido pelo usuário")
+        logger.info("Interrormpido pelo usuario")
     finally:
         await server.stop()
 
@@ -736,14 +736,14 @@ Exemplos:
         '-p', '--port',
         type=int,
         default=DEFAULT_PORT,
-        help=f'Porta TCP (padrão: {DEFAULT_PORT})'
+        help=f'Porta TCP (predeterminado: {DEFAULT_PORT})'
     )
     
     parser.add_argument(
         '--password',
         type=str,
         default='1234',
-        help='Senha da central (padrão: 1234)'
+        help='Contraseña da central (predeterminado: 1234)'
     )
     
     parser.add_argument(
@@ -754,9 +754,9 @@ Exemplos:
     
     args = parser.parse_args()
     
-    # Valida senha
+    # Valida contraseña
     if len(args.password) < 4 or len(args.password) > 6:
-        print("Erro: Senha deve ter entre 4 e 6 dígitos")
+        print("Erro: Contraseña debe tener entre 4 e 6 dígitos")
         sys.exit(1)
     
     setup_logging(args.verbose)
