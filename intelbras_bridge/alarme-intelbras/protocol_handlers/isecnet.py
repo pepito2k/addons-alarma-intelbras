@@ -254,11 +254,7 @@ class ISECNetProtocolHandler:
         triggered_zones = ",".join(str(zone) for zone in violated_list) if violated_list else "Ninguna"
         self.mqtt_client.publish(f"{self.base_topic}/triggered_zones", triggered_zones, retain=True)
 
-        if not status.armed and not status.siren_on:
-            partition_state = "OFF"
-        elif status.siren_on:
-            partition_state = "ON"
-        elif status.partitions.partitions_enabled:
+        if status.partitions.partitions_enabled:
             partition_state = None
         else:
             partition_state = "ON" if status.armed else "OFF"
