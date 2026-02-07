@@ -7,6 +7,7 @@ import threading
 import time
 
 import paho.mqtt.client as mqtt
+from mqtt_runtime import MQTTRuntime
 from protocol_handlers import create_protocol_handler
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] - %(levelname)s - %(message)s', stream=sys.stdout)
@@ -40,53 +41,19 @@ zone_states = {str(i): "Desconocido" for i in range(1, ZONE_COUNT + 1)}
 protocol_handler = None
 
 
-# --- Funciones de MQTT ---
-def publish_zone_states():
-    for zone_id, state in zone_states.items():
-        mqtt_client.publish(f"{BASE_TOPIC}/zone_{zone_id}", state, retain=True)
-    logging.info(f"Estados de zona publicados a MQTT: {zone_states}")
+def get_protocol_handler():
+    return protocol_handler
 
 
-def _current_triggered_zone_ids() -> list[str]:
-    return sorted([zone_id for zone_id, state in zone_states.items() if state == "Disparada"], key=int)
-
-
-def publish_triggered_zones_state():
-    triggered = _current_triggered_zone_ids()
-    mqtt_client.publish(
-        f"{BASE_TOPIC}/triggered_zones",
-        ",".join(triggered) if triggered else "Ninguna",
-        retain=True,
-    )
-
-
-def on_connect(client, userdata, flags, reason_code, properties):
-    if reason_code == 0:
-        logging.info("Conectado a MQTT y suscrito.")
-        client.subscribe(COMMAND_TOPIC)
-        client.publish(AVAILABILITY_TOPIC, "online", retain=True)
-        client.publish(f"{BASE_TOPIC}/ac_power", "on", retain=True)
-        client.publish(f"{BASE_TOPIC}/system_battery", "off", retain=True)
-        client.publish(f"{BASE_TOPIC}/tamper", "off", retain=True)
-        client.publish(f"{BASE_TOPIC}/panic", "off", retain=True)
-        client.publish(f"{BASE_TOPIC}/triggered_zones", "Ninguna", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_a_state", "OFF", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_b_state", "OFF", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_c_state", "OFF", retain=True)
-        client.publish(f"{BASE_TOPIC}/partition_d_state", "OFF", retain=True)
-        publish_zone_states()
-    else:
-        logging.error(f"Fallo al conectar a MQTT: {reason_code}")
-
-
-def on_message(client, userdata, msg):
-    command = msg.payload.decode()
-    logging.info(f"Comando MQTT recibido: '{command}'")
-    with alarm_lock:
-        if protocol_handler is None:
-            logging.error("Handler de protocolo no inicializado.")
-            return
-        protocol_handler.handle_command(command)
+mqtt_runtime = MQTTRuntime(
+    mqtt_client=mqtt_client,
+    base_topic=BASE_TOPIC,
+    command_topic=COMMAND_TOPIC,
+    availability_topic=AVAILABILITY_TOPIC,
+    zone_states=zone_states,
+    alarm_lock=alarm_lock,
+    protocol_handler_getter=get_protocol_handler,
+)
 
 
 def status_polling_thread():
@@ -95,7 +62,7 @@ def status_polling_thread():
         with alarm_lock:
             if protocol_handler is not None:
                 protocol_handler.poll_status()
-                publish_zone_states()
+                mqtt_runtime.publish_zone_states()
         shutdown_event.wait(POLLING_INTERVAL_MINUTES * 60)
     logging.info("Hilo de sondeo terminado.")
 
@@ -104,7 +71,7 @@ def handle_shutdown(signum, frame):
     logging.info("Cerrando addon...")
     shutdown_event.set()
 
-    mqtt_client.publish(AVAILABILITY_TOPIC, "offline", retain=True)
+    mqtt_runtime.publish_offline()
     time.sleep(1)
     mqtt_client.loop_stop()
 
@@ -126,8 +93,8 @@ if __name__ == "__main__":
         zone_states=zone_states,
         zone_count=ZONE_COUNT,
         alarm_lock=alarm_lock,
-        publish_zone_states=publish_zone_states,
-        publish_triggered_zones_state=publish_triggered_zones_state,
+        publish_zone_states=mqtt_runtime.publish_zone_states,
+        publish_triggered_zones_state=mqtt_runtime.publish_triggered_zones_state,
     )
 
     signal.signal(signal.SIGTERM, handle_shutdown)
@@ -138,9 +105,7 @@ if __name__ == "__main__":
         logging.error(startup_error)
         sys.exit(1)
 
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-    mqtt_client.will_set(AVAILABILITY_TOPIC, "offline", retain=True)
+    mqtt_runtime.configure_client()
     if MQTT_USER:
         mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
 
