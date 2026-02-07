@@ -28,6 +28,10 @@ trap cleanup SIGTERM SIGINT
 log "Iniciando Intelbras MQTT Bridge Add-on (v7.5 - Corrección Device Class)"
 export ALARM_IP=$(config 'alarm_ip'); export ALARM_PORT=$(config 'alarm_port'); export ALARM_PASS=$(config 'alarm_password')
 export ALARM_PROTOCOL=$(config 'alarm_protocol' 'isecnet')
+if [[ "${ALARM_PROTOCOL}" == "legacy" || "${ALARM_PROTOCOL}" == "amt800" ]]; then
+    log "El valor '${ALARM_PROTOCOL}' está deprecado; usando 'amt8000'."
+    export ALARM_PROTOCOL="amt8000"
+fi
 export MQTT_BROKER=$(config 'mqtt_broker'); export MQTT_PORT=$(config 'mqtt_port'); export MQTT_USER=$(config 'mqtt_user'); export MQTT_PASS=$(config 'mqtt_password')
 export POLLING_INTERVAL_MINUTES=$(config 'polling_interval_minutes' 5)
 export ZONE_COUNT=$(config 'zone_count' 0)
@@ -39,7 +43,7 @@ log "Configuración cargada. Zonas a gestionar: $ZONE_COUNT."
 # --- FUNCIONES DE DISCOVERY (formato legible) ---
 publish_device_info() {
     local model_name="AMT-8000"
-    if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+    if [[ "${ALARM_PROTOCOL}" != "amt8000" ]]; then
         model_name="AMT-4010"
     fi
     echo "\"device\":{\"identifiers\":[\"${DEVICE_ID}\"],\"name\":\"Alarme Intelbras\",\"model\":\"${model_name}\",\"manufacturer\":\"Intelbras\"}"
@@ -65,7 +69,7 @@ publish_alarm_panel_discovery() {
     log "Publicando Painel de Alarme..."; local uid="${DEVICE_ID}_panel"; local command_topic="intelbras/alarm/command"; local state_topic="intelbras/alarm/state"
     local supported_features='["arm_away"]'
     local extra_payload=""
-    if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+    if [[ "${ALARM_PROTOCOL}" != "amt8000" ]]; then
         supported_features='["arm_away","arm_home","arm_night","arm_vacation","arm_custom_bypass"]'
         extra_payload="\"payload_arm_home\":\"ARM_HOME\",\"payload_arm_night\":\"ARM_NIGHT\",\"payload_arm_vacation\":\"ARM_VACATION\",\"payload_arm_custom_bypass\":\"ARM_CUSTOM_BYPASS\","
     fi
@@ -118,7 +122,7 @@ for i in $(seq 1 "$ZONE_COUNT"); do
     publish_text_sensor_discovery "Zona $i" "zone_$i" "mdi:door"
 done
 
-if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+if [[ "${ALARM_PROTOCOL}" != "amt8000" ]]; then
     log "Publicando switches de particiones..."
     publish_partition_switch_discovery "a" "A"
     publish_partition_switch_discovery "b" "B"
@@ -137,7 +141,7 @@ if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
 fi
 
 # --- GENERACIÓN DE CONFIG.CFG ---
-if [[ "${ALARM_PROTOCOL}" == "legacy" ]]; then
+if [[ "${ALARM_PROTOCOL}" == "amt8000" ]]; then
 log "Generando config.cfg para receptorip..."
 cat > /alarme-intelbras/config.cfg <<EOF
 [receptorip]

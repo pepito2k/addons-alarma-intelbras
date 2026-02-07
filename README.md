@@ -42,7 +42,7 @@ Una vez instalado, ve a la pestaña "Configuración" del add-on e introduce los 
     * `alarm_ip`: La dirección IP fija de tu central de alarma.
     * `alarm_port`: El puerto de comunicación de la central (ej: 9009).
     * `alarm_password`: La contraseña de **acceso remoto** que configuraste en la central.
-    * `alarm_protocol`: Selecciona el protocolo (`isecnet` para AMT 4010, `legacy` para AMT-8000).
+    * `alarm_protocol`: Selecciona el protocolo (`isecnet` para AMT 4010, `amt8000` para AMT-8000).
     * `password_length`: La cantidad de dígitos que tiene tu contraseña (ej: 6).
     * `zone_count`: El número total de zonas de tu alarma.
 * **Datos del Bróker MQTT:**

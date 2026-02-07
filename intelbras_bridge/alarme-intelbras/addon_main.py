@@ -31,7 +31,7 @@ def _normalize_isecnet_password(password: str | None, length: int) -> str | None
 
 ALARM_PASS_ISECNET = _normalize_isecnet_password(ALARM_PASS, PASSWORD_LENGTH)
 
-alarm_client = AlarmClient(host=ALARM_IP, port=ALARM_PORT) if ALARM_PROTOCOL == "legacy" else None
+alarm_client = AlarmClient(host=ALARM_IP, port=ALARM_PORT) if ALARM_PROTOCOL == "amt8000" else None
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 shutdown_event = threading.Event(); alarm_lock = threading.Lock()
 
@@ -100,7 +100,7 @@ def on_message(client, userdata, msg):
     command = msg.payload.decode()
     logging.info(f"Comando MQTT recibido: '{command}'")
     with alarm_lock:
-        if ALARM_PROTOCOL == "legacy":
+        if ALARM_PROTOCOL == "amt8000":
             if not connect_and_auth_alarm():
                 logging.error("Fallo de auth, comando no ejecutado.")
                 return
@@ -110,78 +110,78 @@ def on_message(client, userdata, msg):
                 return
         try:
             if command == "ARM_AWAY":
-                if ALARM_PROTOCOL == "legacy":
+                if ALARM_PROTOCOL == "amt8000":
                     alarm_client.arm_system(0)
                 else:
                     _send_isecnet_command(ActivationCommand.arm_all(ALARM_PASS_ISECNET))
             elif command == "ARM_HOME":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_HOME no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_HOME no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_a(ALARM_PASS_ISECNET))
             elif command == "ARM_NIGHT":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_NIGHT no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_NIGHT no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_b(ALARM_PASS_ISECNET))
             elif command == "ARM_VACATION":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_VACATION no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_VACATION no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_c(ALARM_PASS_ISECNET))
             elif command == "ARM_CUSTOM_BYPASS":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_CUSTOM_BYPASS no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_CUSTOM_BYPASS no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_d(ALARM_PASS_ISECNET))
             elif command == "ARM_PART_A":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_PART_A no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_PART_A no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_a(ALARM_PASS_ISECNET))
             elif command == "ARM_PART_B":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_PART_B no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_PART_B no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_b(ALARM_PASS_ISECNET))
             elif command == "ARM_PART_C":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_PART_C no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_PART_C no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_c(ALARM_PASS_ISECNET))
             elif command == "ARM_PART_D":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("ARM_PART_D no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("ARM_PART_D no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(ActivationCommand.arm_partition_d(ALARM_PASS_ISECNET))
             elif command == "DISARM_PART_A":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("DISARM_PART_A no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("DISARM_PART_A no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(DeactivationCommand.disarm_partition_a(ALARM_PASS_ISECNET))
             elif command == "DISARM_PART_B":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("DISARM_PART_B no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("DISARM_PART_B no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(DeactivationCommand.disarm_partition_b(ALARM_PASS_ISECNET))
             elif command == "DISARM_PART_C":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("DISARM_PART_C no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("DISARM_PART_C no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(DeactivationCommand.disarm_partition_c(ALARM_PASS_ISECNET))
             elif command == "DISARM_PART_D":
-                if ALARM_PROTOCOL == "legacy":
-                    logging.warning("DISARM_PART_D no está soportado en protocolo legacy.")
+                if ALARM_PROTOCOL == "amt8000":
+                    logging.warning("DISARM_PART_D no está soportado en protocolo amt8000.")
                 else:
                     _send_isecnet_command(DeactivationCommand.disarm_partition_d(ALARM_PASS_ISECNET))
             elif command == "DISARM":
-                if ALARM_PROTOCOL == "legacy":
+                if ALARM_PROTOCOL == "amt8000":
                     alarm_client.disarm_system(0)
                 else:
                     _send_isecnet_command(DeactivationCommand.disarm_all(ALARM_PASS_ISECNET))
             elif command == "PANIC":
                 logging.info("¡Activando pánico audible desde Home Assistant!")
-                if ALARM_PROTOCOL == "legacy":
+                if ALARM_PROTOCOL == "amt8000":
                     alarm_client.panic(1) # El tipo 1 suele ser pánico audible
                 else:
                     _send_isecnet_command(SirenCommand.turn_on_siren(ALARM_PASS_ISECNET))
@@ -419,7 +419,7 @@ def status_polling_thread():
     logging.info(f"Iniciando sondeo cada {POLLING_INTERVAL_MINUTES} minutos.")
     while not shutdown_event.is_set():
         with alarm_lock:
-            if ALARM_PROTOCOL == "legacy":
+            if ALARM_PROTOCOL == "amt8000":
                 if not connect_and_auth_alarm():
                     logging.warning("Sondeo omitido, no se pudo autenticar.")
                 else:
@@ -428,12 +428,12 @@ def status_polling_thread():
                         status = alarm_client.status()
                         mqtt_client.publish(f"{BASE_TOPIC}/model", status.get("model", "Desconocido"), retain=True)
                         mqtt_client.publish(f"{BASE_TOPIC}/version", status.get("version", "Desconocido"), retain=True)
-                        legacy_state = status.get("status", "unknown")
-                        if legacy_state == "armed_away":
+                        amt8000_state = status.get("status", "unknown")
+                        if amt8000_state == "armed_away":
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada", retain=True)
-                        elif legacy_state == "partial_armed":
+                        elif amt8000_state == "partial_armed":
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Armada Parcial", retain=True)
-                        elif legacy_state == "disarmed":
+                        elif amt8000_state == "disarmed":
                             mqtt_client.publish(f"{BASE_TOPIC}/state", "Desarmada", retain=True)
                         if status.get("zonesFiring"):
                             mqtt_client.publish(f"{BASE_TOPIC}/triggered_zones", "Desconocido", retain=True)
@@ -453,7 +453,7 @@ def status_polling_thread():
                     except (CommunicationError, AuthError) as e:
                         logging.warning(f"Error durante sondeo: {e}.")
                     except Exception:
-                        logging.exception("Error inesperado durante sondeo legacy.")
+                        logging.exception("Error inesperado durante sondeo amt8000.")
             else:
                 _poll_isecnet_once()
         shutdown_event.wait(POLLING_INTERVAL_MINUTES * 60)
@@ -517,13 +517,13 @@ def handle_shutdown(signum, frame):
     mqtt_client.loop_stop()
     if alarm_client:
         alarm_client.close()
-    if ALARM_PROTOCOL != "legacy":
+    if ALARM_PROTOCOL != "amt8000":
         stop_isecnet_server()
     sys.exit(0)
 
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handle_shutdown); signal.signal(signal.SIGINT, handle_shutdown)
-    if ALARM_PROTOCOL == "legacy":
+    if ALARM_PROTOCOL == "amt8000":
         if not all([ALARM_IP, ALARM_PASS, MQTT_BROKER]):
             logging.error("Faltan variables críticas.")
             sys.exit(1)
@@ -540,10 +540,10 @@ if __name__ == "__main__":
     try: mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
     except Exception as e: logging.error(f"Fallo al conectar a MQTT: {e}"); sys.exit(1)
     mqtt_client.loop_start()
-    if ALARM_PROTOCOL != "legacy":
+    if ALARM_PROTOCOL != "amt8000":
         start_isecnet_server()
     threading.Thread(target=status_polling_thread, daemon=True).start()
-    if ALARM_PROTOCOL == "legacy":
+    if ALARM_PROTOCOL == "amt8000":
         try:
             logging.info("Iniciando 'receptorip'...")
             proc = subprocess.Popen(["/alarme-intelbras/receptorip", "/alarme-intelbras/config.cfg"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
