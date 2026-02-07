@@ -84,6 +84,15 @@ publish_button_discovery() {
     local payload='{'; payload+="\"name\":\"${name}\",\"unique_id\":\"${uid}\",\"command_topic\":\"${command_topic}\","; payload+="\"payload_press\":\"${payload_press}\",\"icon\":\"${icon}\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="$(publish_device_info)"; payload+='}';
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/${uid}/config" -m "${payload}"
 }
+publish_partition_switch_discovery() {
+    local partition_letter=$1
+    local partition_name=$2
+    local uid="${DEVICE_ID}_partition_${partition_letter}_switch"
+    local state_topic="intelbras/alarm/partition_${partition_letter}_state"
+    local command_topic="intelbras/alarm/command"
+    local payload='{'; payload+="\"name\":\"Partição ${partition_name}\",\"unique_id\":\"${uid}\",\"state_topic\":\"${state_topic}\",\"command_topic\":\"${command_topic}\","; payload+="\"value_template\":\"{% if value == 'Armada' or value == 'Disparada' %}ON{% else %}OFF{% endif %}\","; payload+="\"payload_on\":\"ARM_PART_${partition_name}\",\"payload_off\":\"DISARM_PART_${partition_name}\","; payload+="\"state_on\":\"ON\",\"state_off\":\"OFF\",\"icon\":\"mdi:shield-lock\",\"availability_topic\":\"${AVAILABILITY_TOPIC}\","; payload+="$(publish_device_info)"; payload+='}';
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/switch/${DEVICE_ID}/${uid}/config" -m "${payload}"
+}
 
 # --- PUBLICACIÓN DE ENTIDADES ---
 log "Configurando Home Assistant Discovery..."
@@ -110,6 +119,12 @@ for i in $(seq 1 "$ZONE_COUNT"); do
 done
 
 if [[ "${ALARM_PROTOCOL}" != "legacy" ]]; then
+    log "Publicando switches de particiones..."
+    publish_partition_switch_discovery "a" "A"
+    publish_partition_switch_discovery "b" "B"
+    publish_partition_switch_discovery "c" "C"
+    publish_partition_switch_discovery "d" "D"
+
     log "Publicando botones de particiones..."
     publish_button_discovery "Armar Partición A" "arm_part_a" "mdi:shield-lock" "ARM_PART_A"
     publish_button_discovery "Armar Partición B" "arm_part_b" "mdi:shield-lock" "ARM_PART_B"
