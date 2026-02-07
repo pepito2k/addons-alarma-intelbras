@@ -14,7 +14,6 @@ class AMT8000ProtocolHandler:
         mqtt_client,
         base_topic,
         zone_states,
-        zone_count,
         alarm_lock,
         publish_zone_states,
         publish_triggered_zones_state,
@@ -24,7 +23,6 @@ class AMT8000ProtocolHandler:
         self.mqtt_client = mqtt_client
         self.base_topic = base_topic
         self.zone_states = zone_states
-        self.zone_count = zone_count
         self.alarm_lock = alarm_lock
         self.publish_zone_states = publish_zone_states
         self.publish_triggered_zones_state = publish_triggered_zones_state
@@ -135,7 +133,7 @@ class AMT8000ProtocolHandler:
             zones = status.get("zones")
             if isinstance(zones, dict):
                 for zone_id, new_state_str in zones.items():
-                    if int(zone_id) <= self.zone_count and self.zone_states.get(zone_id) != "Disparada":
+                    if zone_id in self.zone_states and self.zone_states.get(zone_id) != "Disparada":
                         self.zone_states[zone_id] = "Abierta" if new_state_str == "open" else "Cerrada"
         except (CommunicationError, AuthError) as exc:
             logging.warning(f"Error durante sondeo: {exc}.")
@@ -186,7 +184,7 @@ class AMT8000ProtocolHandler:
                 elif "Disparo de zona" in line:
                     try:
                         zone_id = line.split()[-1]
-                        if int(zone_id) <= self.zone_count:
+                        if zone_id in self.zone_states:
                             self.zone_states[zone_id] = "Disparada"
                             self.mqtt_client.publish(f"{self.base_topic}/state", "Disparada", retain=True)
                             self.publish_triggered_zones_state()
@@ -197,7 +195,7 @@ class AMT8000ProtocolHandler:
                 elif "Restauracao de zona" in line:
                     try:
                         zone_id = line.split()[-1]
-                        if int(zone_id) <= self.zone_count:
+                        if zone_id in self.zone_states:
                             self.zone_states[zone_id] = "Cerrada"
                             self.publish_triggered_zones_state()
                             publish_required = True

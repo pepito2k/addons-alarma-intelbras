@@ -21,7 +21,6 @@ def create_protocol_handler(
     mqtt_client,
     base_topic,
     zone_states,
-    zone_count,
     alarm_lock,
     publish_zone_states,
     publish_triggered_zones_state,
@@ -34,7 +33,6 @@ def create_protocol_handler(
             mqtt_client=mqtt_client,
             base_topic=base_topic,
             zone_states=zone_states,
-            zone_count=zone_count,
             alarm_lock=alarm_lock,
             publish_zone_states=publish_zone_states,
             publish_triggered_zones_state=publish_triggered_zones_state,
@@ -46,6 +44,5 @@ def create_protocol_handler(
         mqtt_client=mqtt_client,
         base_topic=base_topic,
         zone_states=zone_states,
-        zone_count=zone_count,
         alarm_lock=alarm_lock,
     )

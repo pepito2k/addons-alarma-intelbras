@@ -35,10 +35,14 @@ fi
 export MQTT_BROKER=$(config 'mqtt_broker'); export MQTT_PORT=$(config 'mqtt_port'); export MQTT_USER=$(config 'mqtt_user'); export MQTT_PASS=$(config 'mqtt_password')
 export POLLING_INTERVAL_MINUTES=$(config 'polling_interval_minutes' 5)
 export ZONE_COUNT=$(config 'zone_count' 0)
+export ZONE_RANGE=$(config 'zone_range')
 export PASSWORD_LENGTH=$(config 'password_length')
 MQTT_OPTS=(-h "$MQTT_BROKER" -p "$MQTT_PORT"); [[ -n "$MQTT_USER" ]] && MQTT_OPTS+=(-u "$MQTT_USER" -P "$MQTT_PASS")
 AVAILABILITY_TOPIC="intelbras/alarm/availability"; DEVICE_ID="intelbras_alarm"; DISCOVERY_PREFIX="homeassistant"
-log "Configuración cargada. Zonas a gestionar: $ZONE_COUNT."
+if [[ -z "${ZONE_RANGE}" && "${ZONE_COUNT}" -gt 0 ]]; then
+    export ZONE_RANGE="1-${ZONE_COUNT}"
+fi
+log "Configuración cargada. Rango de zonas: ${ZONE_RANGE:-vacío}."
 
 # --- FUNCIONES DE DISCOVERY (formato legible) ---
 publish_device_info() {
@@ -98,6 +102,32 @@ publish_partition_switch_discovery() {
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/switch/${DEVICE_ID}/${uid}/config" -m "${payload}"
 }
 
+zone_id_list() {
+    local range_text="${ZONE_RANGE}"
+    if [[ -z "${range_text}" ]]; then
+        return
+    fi
+    local chunk
+    IFS=',' read -ra chunks <<< "${range_text}"
+    for chunk in "${chunks[@]}"; do
+        chunk="${chunk// /}"
+        [[ -z "${chunk}" ]] && continue
+        if [[ "${chunk}" == *-* ]]; then
+            local start="${chunk%-*}"
+            local end="${chunk#*-}"
+            if [[ "${start}" =~ ^[0-9]+$ && "${end}" =~ ^[0-9]+$ ]]; then
+                if (( end >= start )); then
+                    seq "${start}" "${end}"
+                else
+                    seq "${end}" "${start}"
+                fi
+            fi
+        elif [[ "${chunk}" =~ ^[0-9]+$ ]]; then
+            echo "${chunk}"
+        fi
+    done | awk '!seen[$0]++'
+}
+
 # --- PUBLICACIÓN DE ENTIDADES ---
 log "Configurando Home Assistant Discovery..."
 remove_partition_alarm_panel_discovery
@@ -118,7 +148,7 @@ publish_binary_sensor_discovery "Batería del Sistema" "system_battery" "battery
 # --- FIN: LÍNEAS CORREGIDAS ---
 
 log "Publicando sensores de zona de texto individuales..."
-for i in $(seq 1 "$ZONE_COUNT"); do
+for i in $(zone_id_list); do
     publish_text_sensor_discovery "Zona $i" "zone_$i" "mdi:door"
 done
 

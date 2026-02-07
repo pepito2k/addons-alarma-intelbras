@@ -30,6 +30,7 @@ options:
   alarm_protocol: "isecnet"
   password_length: 6
   polling_interval_minutes: 5
+  zone_range: "1-8"
   zone_count: 8
   #zone_names: []
   #zone_types: []
@@ -44,6 +45,7 @@ schema:
   alarm_protocol: list(isecnet|amt8000)
   password_length: int(4,6)
   polling_interval_minutes: int(1,1440)
-  zone_count: int(1,64)
+  zone_range: str
+  zone_count: int(0,64)
   #zone_names: [str]
   #zone_types: [str]

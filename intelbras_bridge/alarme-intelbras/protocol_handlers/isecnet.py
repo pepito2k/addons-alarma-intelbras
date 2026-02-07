@@ -24,7 +24,6 @@ class ISECNetProtocolHandler:
         mqtt_client,
         base_topic,
         zone_states,
-        zone_count,
         alarm_lock,
     ):
         self.alarm_pass = alarm_pass
@@ -32,7 +31,6 @@ class ISECNetProtocolHandler:
         self.mqtt_client = mqtt_client
         self.base_topic = base_topic
         self.zone_states = zone_states
-        self.zone_count = zone_count
         self.alarm_lock = alarm_lock
 
         self.server = None
@@ -144,14 +142,15 @@ class ISECNetProtocolHandler:
                 return
 
             self._publish_status(status)
-            for zone_id in range(1, self.zone_count + 1):
+            for zone_key in self.zone_states:
+                zone_id = int(zone_key)
                 zone_key = str(zone_id)
                 if zone_id in status.zones.violated_zones:
-                    self.zone_states[zone_key] = "Disparada"
+                    self.zone_states[str(zone_id)] = "Disparada"
                 elif zone_id in status.zones.open_zones:
-                    self.zone_states[zone_key] = "Abierta"
+                    self.zone_states[str(zone_id)] = "Abierta"
                 elif self.zone_states.get(zone_key) != "Disparada":
-                    self.zone_states[zone_key] = "Cerrada"
+                    self.zone_states[str(zone_id)] = "Cerrada"
         except Exception as exc:
             logging.warning(f"Error durante sondeo ISECNet: {exc}.")
 

@@ -24,6 +24,7 @@ MQTT_USER = os.environ.get('MQTT_USER')
 MQTT_PASS = os.environ.get('MQTT_PASS')
 
 POLLING_INTERVAL_MINUTES = max(1, int(os.environ.get('POLLING_INTERVAL_MINUTES', 5)))
+ZONE_RANGE = os.environ.get('ZONE_RANGE', '').strip()
 ZONE_COUNT = int(os.environ.get('ZONE_COUNT', 0))
 PASSWORD_LENGTH = int(os.environ.get('PASSWORD_LENGTH', 0) or 0)
 
@@ -36,7 +37,33 @@ shutdown_event = threading.Event()
 alarm_lock = threading.Lock()
 
 # --- Almacén Central de Estados ---
-zone_states = {str(i): "Desconocido" for i in range(1, ZONE_COUNT + 1)}
+def _parse_zone_ids(zone_range, fallback_count):
+    if zone_range:
+        try:
+            zone_ids = []
+            for part in zone_range.split(","):
+                token = part.strip()
+                if not token:
+                    continue
+                if "-" in token:
+                    start_str, end_str = token.split("-", 1)
+                    start = int(start_str)
+                    end = int(end_str)
+                    if end < start:
+                        start, end = end, start
+                    zone_ids.extend(range(start, end + 1))
+                else:
+                    zone_ids.append(int(token))
+            zone_ids = sorted(set(zone_ids))
+            if zone_ids:
+                return zone_ids
+        except ValueError:
+            logging.warning(f"ZONE_RANGE inválido '{zone_range}', usando ZONE_COUNT.")
+    return list(range(1, max(0, fallback_count) + 1))
+
+
+ZONE_IDS = _parse_zone_ids(ZONE_RANGE, ZONE_COUNT)
+zone_states = {str(i): "Desconocido" for i in ZONE_IDS}
 
 protocol_handler = None
 
@@ -91,7 +118,6 @@ if __name__ == "__main__":
         mqtt_client=mqtt_client,
         base_topic=BASE_TOPIC,
         zone_states=zone_states,
-        zone_count=ZONE_COUNT,
         alarm_lock=alarm_lock,
         publish_zone_states=mqtt_runtime.publish_zone_states,
         publish_triggered_zones_state=mqtt_runtime.publish_triggered_zones_state,
