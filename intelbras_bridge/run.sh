@@ -91,6 +91,16 @@ remove_partition_alarm_panel_discovery() {
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/alarm_control_panel/${DEVICE_ID}/${DEVICE_ID}_partition_c/config" -n
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/alarm_control_panel/${DEVICE_ID}/${DEVICE_ID}_partition_d/config" -n
 }
+remove_partition_button_discovery() {
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/arm_part_a/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/arm_part_b/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/arm_part_c/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/arm_part_d/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/disarm_part_a/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/disarm_part_b/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/disarm_part_c/config" -n
+    mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/button/${DEVICE_ID}/disarm_part_d/config" -n
+}
 publish_button_discovery() {
     local name=$1; local uid=$2; local icon=$3; local payload_press=${4:-PANIC}
     local command_topic="intelbras/alarm/command"
@@ -154,6 +164,7 @@ zone_name_for_id() {
 # --- PUBLICACIÓN DE ENTIDADES ---
 log "Configurando Home Assistant Discovery..."
 remove_partition_alarm_panel_discovery
+remove_partition_button_discovery
 publish_alarm_panel_discovery
 publish_text_sensor_discovery "Estado Alarma" "state" "mdi:shield-lock"
 publish_text_sensor_discovery "Modelo Alarma" "model" "mdi:chip"
@@ -164,6 +175,8 @@ publish_binary_sensor_discovery "Tamper Alarma" "tamper" "tamper"
 publish_binary_sensor_discovery "Pánico Silencioso" "panic" "safety"
 publish_binary_sensor_discovery "Memoria de Disparo" "alarm_memory" "problem"
 publish_button_discovery "Pánico Audible" "panic_button" "mdi:alert-decagram"
+publish_button_discovery "Armar Total" "arm_total_button" "mdi:shield-lock" "ARM_AWAY"
+publish_button_discovery "Desarmar Total" "disarm_total_button" "mdi:shield-off" "DISARM"
 
 # --- INICIO: LÍNEAS CORREGIDAS ---
 publish_binary_sensor_discovery "Alimentación AC" "ac_power" "power"
@@ -182,16 +195,6 @@ if [[ "${ALARM_PROTOCOL}" != "amt8000" ]]; then
     publish_partition_switch_discovery "b" "B"
     publish_partition_switch_discovery "c" "C"
     publish_partition_switch_discovery "d" "D"
-
-    log "Publicando botones de particiones..."
-    publish_button_discovery "Armar Partición A" "arm_part_a" "mdi:shield-lock" "ARM_PART_A"
-    publish_button_discovery "Armar Partición B" "arm_part_b" "mdi:shield-lock" "ARM_PART_B"
-    publish_button_discovery "Armar Partición C" "arm_part_c" "mdi:shield-lock" "ARM_PART_C"
-    publish_button_discovery "Armar Partición D" "arm_part_d" "mdi:shield-lock" "ARM_PART_D"
-    publish_button_discovery "Desarmar Partición A" "disarm_part_a" "mdi:shield-off" "DISARM_PART_A"
-    publish_button_discovery "Desarmar Partición B" "disarm_part_b" "mdi:shield-off" "DISARM_PART_B"
-    publish_button_discovery "Desarmar Partición C" "disarm_part_c" "mdi:shield-off" "DISARM_PART_C"
-    publish_button_discovery "Desarmar Partición D" "disarm_part_d" "mdi:shield-off" "DISARM_PART_D"
 fi
 
 # --- GENERACIÓN DE CONFIG.CFG ---
