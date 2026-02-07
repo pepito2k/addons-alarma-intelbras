@@ -46,7 +46,7 @@ publish_device_info() {
     if [[ "${ALARM_PROTOCOL}" != "amt8000" ]]; then
         model_name="AMT-4010"
     fi
-    echo "\"device\":{\"identifiers\":[\"${DEVICE_ID}\"],\"name\":\"Alarme Intelbras\",\"model\":\"${model_name}\",\"manufacturer\":\"Intelbras\"}"
+    echo "\"device\":{\"identifiers\":[\"${DEVICE_ID}\"],\"name\":\"Alarma Intelbras\",\"model\":\"${model_name}\",\"manufacturer\":\"Intelbras\"}"
 }
 publish_binary_sensor_discovery() {
     local name=$1; local uid=$2; local device_class=$3; local icon=${4:-}
