@@ -44,7 +44,9 @@ Una vez instalado, ve a la pestaña "Configuración" del add-on e introduce los 
     * `alarm_password`: La contraseña de **acceso remoto** que configuraste en la central.
     * `alarm_protocol`: Selecciona el protocolo (`isecnet` para AMT 4010, `amt8000` para AMT-8000).
     * `password_length`: La cantidad de dígitos que tiene tu contraseña (ej: 6).
-    * `zone_count`: El número total de zonas de tu alarma.
+    * `zone_range`: Rango(s) de zonas a crear en Home Assistant. Ejemplos: `1-8`, `17-20`, `1-8,17-20`.
+    * `zone_names`: Mapa JSON opcional para nombrar zonas en Home Assistant. Ejemplo: `{"17":"Puerta Principal","18":"Cocina","19":"Garaje","20":"Patio"}`.
+    * `zone_count`: Compatibilidad antigua (se usa solo si `zone_range` está vacío).
 * **Datos del Bróker MQTT:**
     * `mqtt_broker`: La dirección de tu bróker (normalmente `core-mosquitto`).
     * `mqtt_port`: El puerto de tu bróker (normalmente `1883`).

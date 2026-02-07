@@ -36,6 +36,7 @@ export MQTT_BROKER=$(config 'mqtt_broker'); export MQTT_PORT=$(config 'mqtt_port
 export POLLING_INTERVAL_MINUTES=$(config 'polling_interval_minutes' 5)
 export ZONE_COUNT=$(config 'zone_count' 0)
 export ZONE_RANGE=$(config 'zone_range')
+export ZONE_NAMES=$(config 'zone_names' '{}')
 export PASSWORD_LENGTH=$(config 'password_length')
 MQTT_OPTS=(-h "$MQTT_BROKER" -p "$MQTT_PORT"); [[ -n "$MQTT_USER" ]] && MQTT_OPTS+=(-u "$MQTT_USER" -P "$MQTT_PASS")
 AVAILABILITY_TOPIC="intelbras/alarm/availability"; DEVICE_ID="intelbras_alarm"; DISCOVERY_PREFIX="homeassistant"
@@ -43,6 +44,10 @@ if [[ -z "${ZONE_RANGE}" && "${ZONE_COUNT}" -gt 0 ]]; then
     export ZONE_RANGE="1-${ZONE_COUNT}"
 fi
 log "Configuración cargada. Rango de zonas: ${ZONE_RANGE:-vacío}."
+if ! echo "${ZONE_NAMES}" | jq -e . >/dev/null 2>&1; then
+    log "zone_names inválido, se ignorará (debe ser JSON objeto, ej: {\"17\":\"Puerta Principal\"})"
+    export ZONE_NAMES="{}"
+fi
 
 # --- FUNCIONES DE DISCOVERY (formato legible) ---
 publish_device_info() {
@@ -135,6 +140,17 @@ zone_id_list() {
     done | awk '!seen[$0]++'
 }
 
+zone_name_for_id() {
+    local zone_id="$1"
+    local custom_name
+    custom_name="$(echo "${ZONE_NAMES}" | jq -r --arg zid "${zone_id}" 'if type == "object" then (.[$zid] // empty) else empty end' 2>/dev/null || true)"
+    if [[ -n "${custom_name}" ]]; then
+        echo "${custom_name}"
+    else
+        echo "Zona ${zone_id}"
+    fi
+}
+
 # --- PUBLICACIÓN DE ENTIDADES ---
 log "Configurando Home Assistant Discovery..."
 remove_partition_alarm_panel_discovery
@@ -157,7 +173,7 @@ publish_binary_sensor_discovery "Batería del Sistema" "system_battery" "battery
 log "Publicando sensores de zona de texto individuales..."
 clear_zone_discovery
 for i in $(zone_id_list); do
-    publish_text_sensor_discovery "Zona $i" "zone_$i" "mdi:door"
+    publish_text_sensor_discovery "$(zone_name_for_id "$i")" "zone_$i" "mdi:door"
 done
 
 if [[ "${ALARM_PROTOCOL}" != "amt8000" ]]; then
