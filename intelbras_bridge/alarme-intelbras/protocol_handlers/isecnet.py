@@ -183,6 +183,7 @@ class ISECNetProtocolHandler:
                 return
 
             logging.info(f"Comando ejecutado por ISECNet: {command_key}")
+            self.poll_status()
         except CommunicationError as exc:
             logging.error(f"Error de comunicación en comando: {exc}")
         except Exception as exc:
@@ -268,6 +269,7 @@ class ISECNetProtocolHandler:
             )
             return
         logging.info(f"Fallback ejecutado por ISECNet: {fallback_key}")
+        self.poll_status()
 
     def _publish_status(self, status):
         self.mqtt_client.publish(f"{self.base_topic}/model", self._model_name(status.model), retain=True)
@@ -297,36 +299,26 @@ class ISECNetProtocolHandler:
         self.mqtt_client.publish(f"{self.base_topic}/triggered_zones", triggered_zones, retain=True)
 
         if status.partitions.partitions_enabled:
-            partition_state = None
+            if status.partitions.all_armed:
+                part_a = part_b = part_c = part_d = "ON"
+            elif status.partitions.any_armed:
+                part_a = "ON" if status.partitions.partition_a_armed else "OFF"
+                part_b = "ON" if status.partitions.partition_b_armed else "OFF"
+                part_c = "ON" if status.partitions.partition_c_armed else "OFF"
+                part_d = "ON" if status.partitions.partition_d_armed else "OFF"
+            elif status.armed:
+                # Algunos firmwares reportan armado general sin bits individuales.
+                part_a = part_b = part_c = part_d = "ON"
+            else:
+                part_a = part_b = part_c = part_d = "OFF"
         else:
-            partition_state = "ON" if status.armed else "OFF"
+            global_state = "ON" if status.armed else "OFF"
+            part_a = part_b = part_c = part_d = global_state
 
-        if partition_state is None:
-            self.mqtt_client.publish(
-                f"{self.base_topic}/partition_a_state",
-                "ON" if status.partitions.partition_a_armed else "OFF",
-                retain=True,
-            )
-            self.mqtt_client.publish(
-                f"{self.base_topic}/partition_b_state",
-                "ON" if status.partitions.partition_b_armed else "OFF",
-                retain=True,
-            )
-            self.mqtt_client.publish(
-                f"{self.base_topic}/partition_c_state",
-                "ON" if status.partitions.partition_c_armed else "OFF",
-                retain=True,
-            )
-            self.mqtt_client.publish(
-                f"{self.base_topic}/partition_d_state",
-                "ON" if status.partitions.partition_d_armed else "OFF",
-                retain=True,
-            )
-        else:
-            self.mqtt_client.publish(f"{self.base_topic}/partition_a_state", partition_state, retain=True)
-            self.mqtt_client.publish(f"{self.base_topic}/partition_b_state", partition_state, retain=True)
-            self.mqtt_client.publish(f"{self.base_topic}/partition_c_state", partition_state, retain=True)
-            self.mqtt_client.publish(f"{self.base_topic}/partition_d_state", partition_state, retain=True)
+        self.mqtt_client.publish(f"{self.base_topic}/partition_a_state", part_a, retain=True)
+        self.mqtt_client.publish(f"{self.base_topic}/partition_b_state", part_b, retain=True)
+        self.mqtt_client.publish(f"{self.base_topic}/partition_c_state", part_c, retain=True)
+        self.mqtt_client.publish(f"{self.base_topic}/partition_d_state", part_d, retain=True)
 
         if alarm_active and alarm_triggered_now:
             self.mqtt_client.publish(f"{self.base_topic}/state", "Disparada", retain=True)
