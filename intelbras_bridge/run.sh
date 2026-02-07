@@ -102,6 +102,13 @@ publish_partition_switch_discovery() {
     mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/switch/${DEVICE_ID}/${uid}/config" -m "${payload}"
 }
 
+clear_zone_discovery() {
+    local i
+    for i in $(seq 1 64); do
+        mosquitto_pub "${MQTT_OPTS[@]}" -r -t "${DISCOVERY_PREFIX}/sensor/${DEVICE_ID}/zone_${i}/config" -n
+    done
+}
+
 zone_id_list() {
     local range_text="${ZONE_RANGE}"
     if [[ -z "${range_text}" ]]; then
@@ -148,6 +155,7 @@ publish_binary_sensor_discovery "Batería del Sistema" "system_battery" "battery
 # --- FIN: LÍNEAS CORREGIDAS ---
 
 log "Publicando sensores de zona de texto individuales..."
+clear_zone_discovery
 for i in $(zone_id_list); do
     publish_text_sensor_discovery "Zona $i" "zone_$i" "mdi:door"
 done
